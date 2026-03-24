@@ -118,6 +118,37 @@
             border: 1px solid rgba(100, 150, 255, 0.4) !important;
         }
 
+        .bottom-bar.tos-music-only {
+            justify-content: center;
+            gap: 0;
+            padding: 0 0 18px;
+            background: transparent;
+            backdrop-filter: none;
+            border-top: none;
+        }
+
+        .bottom-bar.tos-music-only > * {
+            display: none !important;
+        }
+
+        .bottom-bar.tos-music-only #musicPanelSlot {
+            display: flex !important;
+            align-items: center;
+        }
+
+        .bottom-bar.tos-music-only #musicPlaylistPanel {
+            display: flex !important;
+            margin-left: 0 !important;
+            padding: 10px 14px !important;
+            gap: 8px !important;
+            border-left: none !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(10px);
+            border-radius: 10px !important;
+            border: 1px solid rgba(100, 150, 255, 0.4) !important;
+            pointer-events: auto;
+        }
+
         .toggle-btn-ui {
             position: absolute;
             top: 10px;
@@ -522,16 +553,13 @@
         const ambientAudio = document.getElementById('ambientAudio');
         const musicPlaylistPanel = document.getElementById('musicPlaylistPanel');
         const musicPanelSlot = document.getElementById('musicPanelSlot');
+        const bottomBar = document.querySelector('.bottom-bar');
         ambientAudio.volume = 0.3;
 
         function setMusicPanelFloating(isFloating) {
-            if (isFloating) {
-                document.body.appendChild(musicPlaylistPanel);
-                musicPlaylistPanel.classList.add('floating');
-                return;
-            }
             musicPanelSlot.appendChild(musicPlaylistPanel);
             musicPlaylistPanel.classList.remove('floating');
+            bottomBar.classList.toggle('tos-music-only', isFloating);
         }
         
         function loadTrack(index) {
@@ -2911,7 +2939,7 @@
                 document.getElementById('cityPanel').style.display = '';
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
-                document.querySelector('.bottom-bar').style.display = '';
+                bottomBar.style.display = '';
                 // Restore music panel to the bottom bar
                 setMusicPanelFloating(false);
                 // Stop music when TOS ends
@@ -2954,8 +2982,8 @@
             document.getElementById('cityPanel').style.display = 'none';
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
-            document.querySelector('.bottom-bar').style.display = 'none';
-            // Keep music playlist visible during TOS
+            bottomBar.style.display = '';
+            // Keep only music playlist visible during TOS
             setMusicPanelFloating(true);
         });
 
