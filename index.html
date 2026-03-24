@@ -334,6 +334,7 @@
                         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="am" checked style="accent-color:#dd44aa;"><span style="width:8px;height:8px;border-radius:50%;background:#dd44aa;display:inline-block;"></span>Amerika</label>
                         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="ba" checked style="accent-color:#ccaa22;"><span style="width:8px;height:8px;border-radius:50%;background:#ccaa22;display:inline-block;"></span>Batı Afrika</label>
                         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="oa" checked style="accent-color:#00cccc;"><span style="width:8px;height:8px;border-radius:50%;background:#00cccc;display:inline-block;"></span>Orta Asya</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="kg" checked style="accent-color:#b84dff;"><span style="width:8px;height:8px;border-radius:50%;background:#b84dff;display:inline-block;"></span>Kuzey-Güney</label>
                         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="pg" checked style="accent-color:#77ff33;"><span style="width:8px;height:8px;border-radius:50%;background:#77ff33;display:inline-block;"></span>Pasifik-Güney</label>
                     </div>
                 </div>
@@ -383,6 +384,7 @@
             <button class="tourBtn" data-route="am" title="Amerika Turu" style="font-size:9px;background:rgba(221,68,170,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟣AM</button>
             <button class="tourBtn" data-route="ba" title="Batı Afrika Turu" style="font-size:9px;background:rgba(204,170,34,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟡BA</button>
             <button class="tourBtn" data-route="oa" title="Orta Asya Turu" style="font-size:9px;background:rgba(0,204,204,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵OA</button>
+            <button class="tourBtn" data-route="kg" title="Kuzey-Güney Barış Turu" style="font-size:9px;background:rgba(184,77,255,0.45);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟣KG</button>
             <button class="tourBtn" data-route="pg" title="Pasifik-Güney Turu" style="font-size:9px;background:rgba(119,255,51,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟢PG</button>
             <button class="tourBtn" data-route="all" title="Tüm Hatlar Turu" style="font-size:9px;background:rgba(200,50,200,0.5);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">🎬 Tümü</button>
             <button id="tosBtn" title="Tam Otomatik Sinema" style="font-size:9px;background:rgba(255,200,0,0.5);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">🎥 TOS</button>
@@ -398,7 +400,10 @@
                 <button class="cityNav" data-lat="37.57" data-lon="126.98" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Seul</button>
                 <button class="cityNav" data-lat="36.06" data-lon="103.83" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Gansu</button>
                 <button class="cityNav" data-lat="41.17" data-lon="80.26" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Aksu</button>
+                <button class="cityNav" data-lat="55.76" data-lon="37.62" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Moskova</button>
                 <button class="cityNav" data-lat="39.77" data-lon="64.43" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Buhara</button>
+                <button class="cityNav" data-lat="31.55" data-lon="74.34" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Lahor</button>
+                <button class="cityNav" data-lat="23.83" data-lon="91.28" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Tripura</button>
                 <button class="cityNav" data-lat="40.41" data-lon="49.87" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Bakü</button>
                 <button class="cityNav" data-lat="39.93" data-lon="32.86" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Ankara</button>
                 <button class="cityNav" data-lat="41.90" data-lon="12.50" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Roma</button>
@@ -772,6 +777,9 @@
             { name: "Gansu", lat: 36.0611, lon: 103.8343 },
             { name: "Seul", lat: 37.5665, lon: 126.9780 },
             { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
+            { name: "Moskova", lat: 55.76, lon: 37.62 },
+            { name: "Lahor", lat: 31.55, lon: 74.34 },
+            { name: "Tripura", lat: 23.83, lon: 91.28 },
             { name: "Honolulu", lat: 21.3069, lon: -157.8583 },
             { name: "Meksika", lat: 19.4326, lon: -99.1332 },
             { name: "Turks ve Caicos", lat: 21.7507, lon: -71.7506 }
@@ -1802,6 +1810,15 @@
         ];
         const ortaAsyaRoute = createCorridorRoute(ortaAsyaCities, 0x00cccc, 0.15);
 
+        // Kuzey-Güney Barış Hattı: Moskova → Buhara(kesişim) → Lahor → Tripura
+        const kuzeyGuneyCities = [
+            { name: "Moskova", lat: 55.76, lon: 37.62 },
+            { name: "", lat: 39.77, lon: 64.43 },
+            { name: "Lahor", lat: 31.55, lon: 74.34 },
+            { name: "Tripura", lat: 23.83, lon: 91.28 }
+        ];
+        const kuzeyGuneyRoute = createCorridorRoute(kuzeyGuneyCities, 0xb84dff, 0.15);
+
         // === TNB (Tüm Noktalar Arası Bağlantı) System ===
         (function initTNB() {
             const tnbCities = [
@@ -1815,8 +1832,10 @@
                 {name:'San Francisco', lat:37.8, lon:-122.4}, {name:'Lima', lat:-12.0, lon:-77.0},
                 {name:'Marakeş', lat:31.6, lon:-8.0}, {name:'Dakar', lat:14.7, lon:-17.5},
                 {name:'Lagos', lat:6.5, lon:3.4}, {name:'Luanda', lat:-8.8, lon:13.2},
-                {name:'Astana', lat:51.1, lon:71.4}, {name:'Karaçi', lat:24.9, lon:67.0},
-                {name:'Honolulu', lat:21.31, lon:-157.86}, {name:'Dar es Salaam', lat:-6.8, lon:39.3},
+                {name:'Astana', lat:51.1, lon:71.4}, {name:'Moskova', lat:55.76, lon:37.62},
+                {name:'Karaçi', lat:24.9, lon:67.0}, {name:'Lahor', lat:31.55, lon:74.34},
+                {name:'Tripura', lat:23.83, lon:91.28}, {name:'Honolulu', lat:21.31, lon:-157.86},
+                {name:'Dar es Salaam', lat:-6.8, lon:39.3},
                 {name:'Santiago', lat:-33.4, lon:-70.7}, {name:'Hong Kong', lat:22.3, lon:114.2}
             ];
             const tnbFR = 5.18;
@@ -1904,7 +1923,7 @@
         // 18 on Beyaz Kuşak, 3 each on sub-corridors = 36 total
         const satRoutes = [];
         for (let i = 0; i < 18; i++) satRoutes.push({ curve: curve });
-        [atlantikRoute, akdenizRoute, pasifikRoute, amerikaRoute, batiAfrikaRoute, pasifikGuneyRoute].forEach(r => {
+        [atlantikRoute, akdenizRoute, pasifikRoute, amerikaRoute, batiAfrikaRoute, ortaAsyaRoute, kuzeyGuneyRoute, pasifikGuneyRoute].forEach(r => {
             satRoutes.push({ curve: r.curve });
             satRoutes.push({ curve: r.curve });
             satRoutes.push({ curve: r.curve });
@@ -1937,6 +1956,8 @@
                   cities: { group: batiAfrikaRoute.labels }, meb: { mesh: batiAfrikaRoute.tube } },
             oa: { trade: { items: () => ortaAsyaRoute.planes.map(p => p) }, energy: { group: ortaAsyaRoute.energyGroup },
                   cities: { group: ortaAsyaRoute.labels }, meb: { mesh: ortaAsyaRoute.tube } },
+            kg: { trade: { items: () => kuzeyGuneyRoute.planes.map(p => p) }, energy: { group: kuzeyGuneyRoute.energyGroup },
+                  cities: { group: kuzeyGuneyRoute.labels }, meb: { mesh: kuzeyGuneyRoute.tube } },
             pg: { trade: { items: () => pasifikGuneyRoute.planes.map(p => p) }, energy: { group: pasifikGuneyRoute.energyGroup },
                   cities: { group: pasifikGuneyRoute.labels }, meb: { mesh: pasifikGuneyRoute.tube } }
         };
@@ -2838,6 +2859,13 @@
                     {name:'Karaçi', lat:24.9, lon:67.0}, {name:'Kolombo', lat:6.9, lon:79.9}
                 ]
             },
+            kg: {
+                name: 'Kuzey-Güney Barış Hattı — Dikey',
+                cities: [
+                    {name:'Moskova', lat:55.76, lon:37.62}, {name:'Buhara', lat:39.77, lon:64.43},
+                    {name:'Lahor', lat:31.55, lon:74.34}, {name:'Tripura', lat:23.83, lon:91.28}
+                ]
+            },
             pg: {
                 name: 'Pasifik-Güney Hattı — Dikey',
                 cities: [
@@ -2872,6 +2900,9 @@
             'Lagos': { latin: 'Àlàáfíà Nílé, Àlàáfíà Lágbàáyé', native: '' },
             'Astana': { latin: 'Yurtda Tınıştıq, Älemde Tınıştıq', native: 'Жұртта тыныштық, Әлемде тыныштық' },
             'Karaçi': { latin: 'Watan Mein Aman, Jahan Mein Aman', native: 'وطن میں امن، جہان میں امن' },
+            'Moskova': { latin: 'Mir v Dome, Mir vo Vsem Mire', native: 'Мир в доме, мир во всем мире' },
+            'Lahor': { latin: 'Aman Ghar Mein, Aman Duniya Mein', native: 'امن گھر میں، امن دنیا میں' },
+            'Tripura': { latin: 'Shanti Ghore, Shanti Bisshe', native: '' },
             'Hong Kong': { latin: 'Peace at Home, Peace in the World', native: '' },
             'Londra': { latin: 'Peace at Home, Peace in the World', native: '' },
             'Marakeş': { latin: 'As-Salaam fil-Watan, As-Salaam fil-Aalam', native: 'السلام في الوطن، السلام في العالم' },
@@ -3027,7 +3058,7 @@
                     return;
                 }
                 if (route === 'all') {
-                    tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'pg'];
+                    tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'kg', 'pg'];
                     cinemaActive = true;
                     startRouteTour('bk');
                 } else {
@@ -3067,7 +3098,7 @@
 
             // 1. Start full cinematic tour (all routes)
             if (!tourActive) {
-                tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'pg'];
+                tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'kg', 'pg'];
                 cinemaActive = true;
                 startRouteTour('bk');
             }
