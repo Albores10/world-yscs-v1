@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyaz Barış Hava Koridoru - Antigravity Era</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Inter', sans-serif; touch-action: none; }
+        .cityNav::-webkit-scrollbar, div:has(>.cityNav)::-webkit-scrollbar { display: none; }
+        canvas { display: block; width: 100vw; height: 100vh; cursor: grab; }
+        canvas:active { cursor: grabbing; }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ui-overlay.hidden-menu {
+            transform: translateY(-110%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            color: white;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .city-list {
+            font-size: 0.75rem;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-shrink: 1;
+            min-width: 0;
+        }
+        .city-list::-webkit-scrollbar { height: 3px; }
+        .city-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        
+        .legend {
+            position: absolute;
+            bottom: 70px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 16px;
+            border-radius: 16px;
+            color: white;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .sun-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: linear-gradient(to right, #1a1a3e, #f59e0b, #1a1a3e);
+            border-radius: 4px;
+            outline: none;
+        }
+        .sun-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+        }
+
+        .toggle-btn-ui {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: none;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn-ui:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .close-btn {
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            padding: 2px;
+            flex-shrink: 0;
+        }
+        .close-btn:hover { color: white; }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .city-tag {
+            background: rgba(255,255,255,0.08);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.7);
+            flex-shrink: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .4s;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #3b82f6; border-color: #3b82f6; }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body>
+
+    <button id="openMenuBtn" class="toggle-btn-ui" onclick="toggleMenu(false)">
+        ☰ Menüyü Göster
+    </button>
+
+    <div id="mainOverlay" class="ui-overlay">
+        <div class="card">
+            <h1 class="text-sm font-bold tracking-tight text-white" style="flex-shrink:0;">Beyaz Barış Koridoru</h1>
+
+            <div class="controls-group">
+                <!-- Layer select combobox -->
+                <div class="control-item" style="position:relative;">
+                    <span class="text-[10px] text-gray-300">Katmanlar</span>
+                    <button id="layerComboBtn" style="font-size:10px;background:rgba(60,60,100,0.7);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;min-width:80px;text-align:left;">Tümü ▾</button>
+                    <div id="layerComboList" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:rgba(0,0,0,0.92);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 8px;min-width:160px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.7);">
+                        <div style="display:flex;gap:4px;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.15);">
+                            <button id="layerSelectAll" style="flex:1;font-size:9px;background:rgba(0,200,100,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">✅ Tümünü Seç</button>
+                            <button id="layerDeselectAll" style="flex:1;font-size:9px;background:rgba(200,50,50,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">❌ Tümünü Bırak</button>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08);"><input type="checkbox" class="layerChk" data-layer="bk" checked style="accent-color:#fff;"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block;border:1px solid rgba(255,255,255,0.3);"></span><b>Beyaz Kuşak</b></label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="at" checked style="accent-color:#22cc66;"><span style="width:8px;height:8px;border-radius:50%;background:#22cc66;display:inline-block;"></span>Atlantik</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="ak" checked style="accent-color:#ff8833;"><span style="width:8px;height:8px;border-radius:50%;background:#ff8833;display:inline-block;"></span>Akdeniz-Afrika</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="pa" checked style="accent-color:#3399ff;"><span style="width:8px;height:8px;border-radius:50%;background:#3399ff;display:inline-block;"></span>Pasifik-Asya</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="am" checked style="accent-color:#dd44aa;"><span style="width:8px;height:8px;border-radius:50%;background:#dd44aa;display:inline-block;"></span>Amerika</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="ba" checked style="accent-color:#ccaa22;"><span style="width:8px;height:8px;border-radius:50%;background:#ccaa22;display:inline-block;"></span>Batı Afrika</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="oa" checked style="accent-color:#00cccc;"><span style="width:8px;height:8px;border-radius:50%;background:#00cccc;display:inline-block;"></span>Orta Asya</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="layerChk" data-layer="pg" checked style="accent-color:#77ff33;"><span style="width:8px;height:8px;border-radius:50%;background:#77ff33;display:inline-block;"></span>Pasifik-Güney</label>
+                    </div>
+                </div>
+                <!-- Feature controls combobox -->
+                <div class="control-item" style="position:relative;">
+                    <span class="text-[10px] text-gray-300">Özellikler</span>
+                    <button id="featComboBtn" style="font-size:10px;background:rgba(60,60,100,0.7);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;min-width:70px;text-align:left;">🚚⚡🏙📐 ▾</button>
+                    <div id="featComboList" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:rgba(0,0,0,0.92);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 8px;min-width:140px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.7);">
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="featChk" data-feat="trade" checked>🚚 Ticaret</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="featChk" data-feat="energy" checked>⚡ Enerji</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="featChk" data-feat="cities" checked>🏙 Şehirler</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="featChk" data-feat="meb" checked>📐 MEB</label>
+                        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#fff;padding:3px 0;"><input type="checkbox" class="featChk" data-feat="satellites" checked>🛰 Uydular</label>
+                    </div>
+                </div>
+                <!-- Rotation bar -->
+                <div class="control-item" style="gap:3px;">
+                    <span class="text-[10px] text-gray-300">Dönüş</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button id="rotPlayBtn" style="font-size:11px;background:rgba(0,200,100,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶️</button>
+                        <input type="range" id="rotSpeedSlider" min="0" max="400" value="100" step="10" style="width:60px;height:12px;accent-color:#00ccff;cursor:pointer;">
+                        <span id="rotSpeedLabel" style="font-size:9px;color:#00ccff;font-weight:bold;min-width:20px;">1x</span>
+                    </div>
+                </div>
+                <!-- TNB: Inter-city connections -->
+                <div class="control-item" style="gap:3px;padding-left:6px;border-left:1px solid rgba(255,255,255,0.15);">
+                    <span class="text-[10px] text-gray-300" title="Tüm Noktalar Arası Bağlantı">TNB</span>
+                    <input type="range" id="tnbSlider" min="0" max="100" value="0" step="5" style="width:55px;height:12px;accent-color:#ff6600;cursor:pointer;">
+                    <span id="tnbLabel" style="font-size:9px;color:#ff6600;font-weight:bold;min-width:18px;">0</span>
+                    <button id="tnbAutoBtn" title="TNB Gece/Gündüz Senkron" style="font-size:10px;background:rgba(255,100,0,0.4);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">▶️</button>
+                </div>
+            </div>
+            <div class="close-btn" onclick="toggleMenu(true)" style="margin-left:auto;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+            <div class="close-btn" onclick="hideAllUI()" title="Tümünü Gizle" style="margin-left:2px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </div>
+        </div>
+        <!-- Row 2: Cinematic tour + zoom + cities -->
+        <div style="display:flex;align-items:center;gap:6px;padding:2px 12px 4px;flex-wrap:wrap;">
+            <span style="font-size:9px;color:#888;">Tur</span>
+            <button class="tourBtn" data-route="bk" title="Beyaz Kuşak Turu" style="font-size:9px;background:rgba(255,255,255,0.25);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">⬜BK</button>
+            <button class="tourBtn" data-route="at" title="Atlantik Turu" style="font-size:9px;background:rgba(34,204,102,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟢AT</button>
+            <button class="tourBtn" data-route="ak" title="Akdeniz-Afrika Turu" style="font-size:9px;background:rgba(255,136,51,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟠AK</button>
+            <button class="tourBtn" data-route="pa" title="Pasifik-Asya Turu" style="font-size:9px;background:rgba(51,153,255,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵PA</button>
+            <button class="tourBtn" data-route="am" title="Amerika Turu" style="font-size:9px;background:rgba(221,68,170,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟣AM</button>
+            <button class="tourBtn" data-route="ba" title="Batı Afrika Turu" style="font-size:9px;background:rgba(204,170,34,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟡BA</button>
+            <button class="tourBtn" data-route="oa" title="Orta Asya Turu" style="font-size:9px;background:rgba(0,204,204,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵OA</button>
+            <button class="tourBtn" data-route="pg" title="Pasifik-Güney Turu" style="font-size:9px;background:rgba(119,255,51,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟢PG</button>
+            <button class="tourBtn" data-route="all" title="Tüm Hatlar Turu" style="font-size:9px;background:rgba(200,50,200,0.5);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">🎬 Tümü</button>
+            <button id="tosBtn" title="Tam Otomatik Sinema" style="font-size:9px;background:rgba(255,200,0,0.5);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">🎥 TOS</button>
+            <button id="yscsBtn" title="Yurtta Sulh Cihanda Sulh — Şehir Hover Modu" style="font-size:9px;background:rgba(100,200,255,0.4);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">YSCS</button>
+            <span style="font-size:7px;color:#555;margin-left:2px;">|</span>
+            <span style="font-size:7px;color:#888;">📷</span>
+            <button class="zoomBtn" data-zoom="8" style="font-size:7px;background:rgba(0,200,255,0.3);border:none;color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;">Yakın</button>
+            <button class="zoomBtn" data-zoom="11" style="font-size:7px;background:rgba(0,200,255,0.5);border:1px solid rgba(0,200,255,0.6);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;">Orta</button>
+            <button class="zoomBtn" data-zoom="16" style="font-size:7px;background:rgba(0,200,255,0.3);border:none;color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;">Uzak</button>
+            <span style="font-size:7px;color:#555;margin-left:2px;">|</span>
+            <div style="display:flex;gap:2px;overflow-x:auto;max-width:320px;scrollbar-width:none;-ms-overflow-style:none;">
+                <button class="cityNav" data-lat="35.68" data-lon="139.65" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Tokyo</button>
+                <button class="cityNav" data-lat="37.57" data-lon="126.98" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Seul</button>
+                <button class="cityNav" data-lat="36.06" data-lon="103.83" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Gansu</button>
+                <button class="cityNav" data-lat="41.17" data-lon="80.26" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Aksu</button>
+                <button class="cityNav" data-lat="39.77" data-lon="64.43" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Buhara</button>
+                <button class="cityNav" data-lat="40.41" data-lon="49.87" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Bakü</button>
+                <button class="cityNav" data-lat="39.93" data-lon="32.86" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Ankara</button>
+                <button class="cityNav" data-lat="41.90" data-lon="12.50" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Roma</button>
+                <button class="cityNav" data-lat="40.42" data-lon="-3.70" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Madrid</button>
+                <button class="cityNav" data-lat="21.75" data-lon="-71.75" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Turks</button>
+                <button class="cityNav" data-lat="19.43" data-lon="-99.13" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Meksika</button>
+                <button class="cityNav" data-lat="21.31" data-lon="-157.86" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Honolulu</button>
+            </div>
+        </div>
+    </div>
+<!--
+
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerBeyazKusak" checked style="accent-color:#fff;"><span style="width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block;"></span>Beyaz Kuşak</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="bk" data-feat="trade" title="Ticaret" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="bk" data-feat="energy" title="Enerji" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="bk" data-feat="cities" title="Şehirler" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="bk" data-feat="meb" title="MEB" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerAtlantik" checked style="accent-color:#22cc66;"><span style="width:6px;height:6px;border-radius:50%;background:#22cc66;display:inline-block;"></span>Atlantik</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="at" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="at" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="at" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="at" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerAkdeniz" checked style="accent-color:#ff8833;"><span style="width:6px;height:6px;border-radius:50%;background:#ff8833;display:inline-block;"></span>Akdeniz-Afrika</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="ak" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="ak" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="ak" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="ak" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerPasifik" checked style="accent-color:#3399ff;"><span style="width:6px;height:6px;border-radius:50%;background:#3399ff;display:inline-block;"></span>Pasifik-Asya</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="pa" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="pa" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="pa" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="pa" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerAmerika" checked style="accent-color:#dd44aa;"><span style="width:6px;height:6px;border-radius:50%;background:#dd44aa;display:inline-block;"></span>Amerika</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="am" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="am" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="am" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="am" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerBatiAfrika" checked style="accent-color:#ccaa22;"><span style="width:6px;height:6px;border-radius:50%;background:#ccaa22;display:inline-block;"></span>Batı Afrika</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="ba" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="ba" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="ba" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="ba" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerOrtaAsya" checked style="accent-color:#00cccc;"><span style="width:6px;height:6px;border-radius:50%;background:#00cccc;display:inline-block;"></span>Orta Asya</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="oa" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="oa" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="oa" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="oa" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:10px;color:#fff;"><input type="checkbox" id="layerPasifikGuney" checked style="accent-color:#77ff33;"><span style="width:6px;height:6px;border-radius:50%;background:#77ff33;display:inline-block;"></span>Pasifik-Güney</label><div style="display:flex;gap:2px;"><button class="lsub" data-layer="pg" data-feat="trade" style="font-size:8px;background:rgba(0,200,100,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🚚</button><button class="lsub" data-layer="pg" data-feat="energy" style="font-size:8px;background:rgba(255,200,0,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">⚡</button><button class="lsub" data-layer="pg" data-feat="cities" style="font-size:8px;background:rgba(0,150,255,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">🏙</button><button class="lsub" data-layer="pg" data-feat="meb" style="font-size:8px;background:rgba(150,150,150,0.5);border:none;border-radius:3px;padding:1px 3px;cursor:pointer;color:#fff;">📐</button></div></div>
+                        </div>
+                    </div>
+                </div> -->
+<!-- 
+                <!== Rotation speed ==>
+                <div class="control-item" style="gap:3px;">
+                    <span class="text-[10px] text-gray-300">Dönüş</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button id="rotPlayBtn" style="font-size:11px;background:rgba(0,200,100,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶️</button>
+                        <input type="range" id="rotSpeedSlider" min="0" max="400" value="100" step="10" style="width:60px;height:12px;accent-color:#00ccff;cursor:pointer;">
+                        <span id="rotSpeedLabel" style="font-size:9px;color:#00ccff;font-weight:bold;min-width:20px;">1x</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="close-btn" onclick="toggleMenu(true)" style="margin-left:auto;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+    </div>
+-->
+
+
+    <div id="legendBox" class="legend">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-3 h-3 bg-white/60 border border-white rounded-sm"></div>
+            <span class="font-medium text-xs text-white">Beyaz Kuşak (<span id="corridorKmLabel">~1.600</span>km)</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+            <span class="font-medium text-xs text-white">Antigravity Trafiği</span>
+        </div>
+    </div>
+
+    <!-- Mini stats panel -->
+    <div id="miniStats" style="position:fixed;bottom:50px;right:20px;background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,0.8);font-size:10px;z-index:90;letter-spacing:0.5px;">
+        ✈️ 0 &nbsp;🚢 0 &nbsp;🚂 0 &nbsp;🚛 0
+    </div>
+
+    <!-- Left city panel -->
+    <div id="cityPanel" style="position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:row;align-items:flex-start;gap:6px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <button id="cityPanelBtn" style="font-size:14px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:10px;width:30px;height:30px;cursor:pointer;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;">🏙</button>
+            <!-- Globe transparency slider -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px 4px;">
+                <span style="font-size:10px;color:#aaa;">🌍</span>
+                <input type="range" id="globeOpacitySlider" min="0" max="100" value="100" step="2"
+                    style="writing-mode:vertical-lr;direction:rtl;height:100px;width:16px;accent-color:#44aaff;cursor:pointer;">
+                <span id="globeOpacityLabel" style="font-size:8px;color:#44aaff;font-weight:bold;">100</span>
+            </div>
+        </div>
+        <div id="cityPanelList" style="display:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 10px;max-height:300px;overflow-y:auto;min-width:120px;">
+            <span style="font-size:9px;color:#888;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Şehirler</span>
+            <div id="cityList" class="city-list"></div>
+        </div>
+    </div>
+
+    <!-- Vertical corridor width slider -->
+    <div id="corridorSliderBox" style="position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:100;">
+        <span style="font-size:9px;color:#aaa;writing-mode:vertical-rl;">Şerit Genişliği</span>
+        <span id="corridorMaxLabel" style="font-size:9px;color:#ccc;">3000</span>
+        <input type="range" id="corridorWidthSlider" min="1000" max="3000" value="1600" step="50"
+            style="writing-mode:vertical-lr;direction:rtl;height:140px;width:22px;accent-color:#00ccff;cursor:pointer;">
+        <span id="corridorMinLabel" style="font-size:9px;color:#ccc;">1000</span>
+        <span id="corridorValLabel" style="font-size:11px;color:#00ccff;font-weight:bold;">1600km</span>
+        <button id="corridorAutoBtn" title="Gündüz/Gece Senkron" style="font-size:12px;background:rgba(255,165,0,0.4);border:none;color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶️</button>
+    </div>
+
+    <div class="bottom-bar">
+        <span style="font-size:16px;">🌙</span>
+        <button id="sunPlayBtn" style="font-size:14px;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶️</button>
+        <input type="range" id="sunSlider" class="sun-slider" min="0" max="360" value="45" step="1">
+        <span style="font-size:16px;">☀️</span>
+        <div style="display:flex;align-items:center;gap:3px;margin-left:8px;padding-left:8px;border-left:1px solid rgba(255,255,255,0.2);">
+            <span style="font-size:9px;color:#aaa;">Hız</span>
+            <input type="range" id="sunSpeedSlider" min="50" max="500" value="100" step="25" style="width:50px;height:10px;accent-color:#ffaa00;cursor:pointer;">
+            <span id="sunSpeedLabel" style="font-size:9px;color:#ffaa00;font-weight:bold;min-width:22px;">1x</span>
+        </div>
+        <button id="screenshotBtn" title="Ekran Görüntüsü" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px;">📸</button>
+        <button id="musicBtn" title="Müzik Aç/Kapat" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🎵</button>
+        <audio id="ambientAudio" loop preload="none" src="music/12 Dil v4.wav"></audio>
+        <span id="timeLabel" class="text-[10px] text-gray-400" style="min-width:60px;text-align:right;">Gündüz</span>
+    </div>
+
+    <!-- Cinematic overlay -->
+    <div id="cinemaOverlay" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none;">
+        <div style="position:absolute;top:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,#000,transparent);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,#000,transparent);"></div>
+        <div id="peaceQuote" style="position:absolute;top:50px;left:0;right:0;text-align:center;opacity:0;transition:opacity 1.8s;pointer-events:none;padding:18px 20px;background:linear-gradient(to bottom,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.6) 70%,transparent 100%);">
+            <div id="peaceQuoteLatin" style="color:#ffd700;font-size:26px;font-weight:400;letter-spacing:4px;text-shadow:0 2px 16px rgba(0,0,0,1),0 0 30px rgba(0,0,0,0.8);font-family:'Inter','Segoe UI',sans-serif;"></div>
+            <div id="peaceQuoteNative" style="color:rgba(255,255,255,0.95);font-size:20px;font-weight:300;letter-spacing:2px;text-shadow:0 2px 12px rgba(0,0,0,1),0 0 20px rgba(0,0,0,0.7);margin-top:6px;font-family:'Inter','Segoe UI','Noto Sans',sans-serif;"></div>
+        </div>
+        <div id="cinemaText" style="position:absolute;bottom:20px;left:0;right:0;color:#fff;font-size:24px;font-weight:300;letter-spacing:3px;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,0.9);opacity:0;transition:opacity 1s;font-family:'Inter','Segoe UI',sans-serif;padding:12px 20px;background:linear-gradient(to top,rgba(0,0,0,0.6),transparent);"></div>
+        <div id="cinemaTimer" style="position:absolute;top:10px;right:20px;color:rgba(255,255,255,0.5);font-size:11px;"></div>
+    </div>
+    <!-- YSCS hover tooltip -->
+    <div id="yscsTooltip" style="display:none;position:fixed;z-index:300;pointer-events:none;text-align:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);border:1px solid rgba(255,220,150,0.3);border-radius:10px;padding:10px 18px;">
+        <div id="yscsCity" style="color:#fff;font-size:14px;font-weight:500;letter-spacing:1px;font-family:'Inter','Segoe UI',sans-serif;margin-bottom:4px;"></div>
+        <div id="yscsLatin" style="color:rgba(255,220,150,1);font-size:16px;font-weight:300;letter-spacing:2px;font-family:'Inter','Segoe UI',sans-serif;"></div>
+        <div id="yscsNative" style="color:rgba(255,255,255,0.8);font-size:13px;font-weight:300;letter-spacing:1px;font-family:'Inter','Segoe UI','Noto Sans',sans-serif;margin-top:2px;"></div>
+    </div>
+    <script>
+        let isRotationActive = true;
+        let rotationSpeed = 1.0; // 0 to 4
+        let isFlightActive = true;
+        let flightVisible = true;
+        let isLabelsActive = true;
+        let isEnergyActive = true;
+
+        // Rotation speed bar
+        const rotSpeedSlider = document.getElementById('rotSpeedSlider');
+        const rotPlayBtn = document.getElementById('rotPlayBtn');
+        rotSpeedSlider.addEventListener('input', (e) => {
+            rotationSpeed = parseInt(e.target.value) / 100;
+            document.getElementById('rotSpeedLabel').textContent = rotationSpeed.toFixed(1) + 'x';
+            if (rotationSpeed > 0 && !isRotationActive) {
+                isRotationActive = true;
+                rotPlayBtn.textContent = '⏸️';
+                rotPlayBtn.style.background = 'rgba(200,200,0,0.7)';
+            }
+        });
+        rotPlayBtn.addEventListener('click', () => {
+            isRotationActive = !isRotationActive;
+            rotPlayBtn.textContent = isRotationActive ? '⏸️' : '▶️';
+            rotPlayBtn.style.background = isRotationActive ? 'rgba(200,200,0,0.7)' : 'rgba(0,200,100,0.7)';
+        });
+        // Old toggle handlers removed - now handled by .featChk checkboxes
+        // Corridor width slider
+        let corridorScale = 1.0; // ratio to base 1600km
+        document.getElementById('corridorWidthSlider').addEventListener('input', (e) => {
+            const km = parseInt(e.target.value);
+            corridorScale = km / 1600;
+            document.getElementById('corridorValLabel').textContent = km + 'km';
+            document.getElementById('corridorKmLabel').textContent = '~' + km.toLocaleString('tr-TR');
+            if (typeof corridor !== 'undefined' && typeof curve !== 'undefined') {
+                const newRadius = km * 0.000481;
+                corridor.geometry.dispose();
+                corridor.geometry = new THREE.TubeGeometry(curve, 600, newRadius, 20, true);
+            }
+            // Scale visible planes based on corridor width
+            if (typeof planes !== 'undefined') {
+                const visibleCount = Math.floor(planes.length * corridorScale);
+                planes.forEach((p, i) => { p.scaledVisible = i < visibleCount; });
+            }
+            if (typeof dispersalPlanes !== 'undefined') {
+                const visibleCount = Math.floor(dispersalPlanes.length * corridorScale);
+                dispersalPlanes.forEach((dp, i) => { dp.scaledVisible = i < visibleCount; });
+            }
+            if (typeof breakawayPlanes !== 'undefined') {
+                const visibleCount = Math.floor(breakawayPlanes.length * corridorScale);
+                breakawayPlanes.forEach((bp, i) => { bp.scaledVisible = i < visibleCount; });
+            }
+            // Scale ships and land vehicles
+            if (typeof ships !== 'undefined') {
+                const visibleCount = Math.floor(ships.length * corridorScale);
+                ships.forEach((s, i) => { s.scaledVisible = i < visibleCount; });
+            }
+            if (typeof landVehicles !== 'undefined') {
+                const visibleCount = Math.floor(landVehicles.length * corridorScale);
+                landVehicles.forEach((v, i) => { v.scaledVisible = i < visibleCount; });
+            }
+            if (typeof updateCorridorColor === 'function') updateCorridorColor();
+        });
+
+        // Corridor auto-sync with day/night
+        let corridorAutoSync = false;
+        document.getElementById('corridorAutoBtn').addEventListener('click', () => {
+            corridorAutoSync = !corridorAutoSync;
+            const btn = document.getElementById('corridorAutoBtn');
+            btn.textContent = corridorAutoSync ? '⏸️' : '▶️';
+            btn.style.background = corridorAutoSync ? 'rgba(255,165,0,0.7)' : 'rgba(255,165,0,0.4)';
+        });
+
+        // TNB auto-sync with day/night
+        let tnbAutoSync = false;
+        document.getElementById('tnbAutoBtn').addEventListener('click', () => {
+            tnbAutoSync = !tnbAutoSync;
+            const btn = document.getElementById('tnbAutoBtn');
+            btn.textContent = tnbAutoSync ? '⏸️' : '▶️';
+            btn.style.background = tnbAutoSync ? 'rgba(255,100,0,0.7)' : 'rgba(255,100,0,0.4)';
+        });
+
+        // Screenshot handler
+        document.getElementById('screenshotBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'beyaz-baris-koridoru-' + Date.now() + '.png';
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        });
+
+        // Music toggle handler
+        let musicPlaying = false;
+        const ambientAudio = document.getElementById('ambientAudio');
+        ambientAudio.volume = 0.3;
+        document.getElementById('musicBtn').addEventListener('click', () => {
+            musicPlaying = !musicPlaying;
+            const btn = document.getElementById('musicBtn');
+            if (musicPlaying) {
+                ambientAudio.play();
+                btn.style.background = 'rgba(100,200,255,0.4)';
+                btn.textContent = '🔊';
+            } else {
+                ambientAudio.pause();
+                btn.style.background = 'rgba(255,255,255,0.12)';
+                btn.textContent = '🎵';
+            }
+        });
+
+        // Traffic density color for corridor
+        function updateCorridorColor() {
+            // Ana beyaz koridor her zaman beyaz kalır
+        }
+
+        var tnbPairs = [], tnbVisibleCount = 0, tnbGroup = null;
+
+        function toggleMenu(hide) {
+            const overlay = document.getElementById('mainOverlay');
+            const openBtn = document.getElementById('openMenuBtn');
+            const legend = document.getElementById('legendBox');
+            overlay.classList.toggle('hidden-menu', hide);
+            openBtn.style.display = hide ? 'block' : 'none';
+            legend.style.opacity = hide ? '0.4' : '1';
+            // Restore all panels when showing menu (TOS recovery)
+            if (!hide) {
+                document.getElementById('legendBox').style.display = '';
+                document.getElementById('cityPanel').style.display = '';
+                document.getElementById('corridorSliderBox').style.display = '';
+                document.getElementById('miniStats').style.display = '';
+                document.querySelector('.bottom-bar').style.display = '';
+                if (typeof tosActive !== 'undefined' && tosActive) {
+                    tosActive = false;
+                    document.getElementById('tosBtn').style.background = 'rgba(255,200,0,0.5)';
+                }
+            }
+        }
+
+        function hideAllUI() {
+            toggleMenu(true);
+            document.getElementById('legendBox').style.display = 'none';
+            document.getElementById('cityPanel').style.display = 'none';
+            document.getElementById('corridorSliderBox').style.display = 'none';
+            document.getElementById('miniStats').style.display = 'none';
+            document.querySelector('.bottom-bar').style.display = 'none';
+            const leftPanel = document.getElementById('leftPanel');
+            if (leftPanel) leftPanel.style.display = 'none';
+        }
+
+        const cities = [
+            { name: "Madrid", lat: 40.4168, lon: -3.7038 },
+            { name: "Roma", lat: 41.9028, lon: 12.4964 },
+            { name: "Ankara", lat: 39.9334, lon: 32.8597 },
+            { name: "Bakü", lat: 40.4093, lon: 49.8671 },
+            { name: "Buhara", lat: 39.7747, lon: 64.4286 },
+            { name: "Aksu", lat: 41.1707, lon: 80.2633 },
+            { name: "Gansu", lat: 36.0611, lon: 103.8343 },
+            { name: "Seul", lat: 37.5665, lon: 126.9780 },
+            { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
+            { name: "Honolulu", lat: 21.3069, lon: -157.8583 },
+            { name: "Meksika", lat: 19.4326, lon: -99.1332 },
+            { name: "Turks ve Caicos", lat: 21.7507, lon: -71.7506 }
+        ];
+
+        const listContainer = document.getElementById('cityList');
+        let targetRotation = null;
+        let navPauseTimeout = null;
+
+        function navigateToCity(city) {
+            // Compute target rotation to face this city toward camera
+            const targetY = -city.lon * Math.PI / 180 - Math.PI / 2;
+            const targetX = city.lat * Math.PI / 180;
+            // Normalize current rotation.y to find shortest path
+            let currentY = earthGroup.rotation.y;
+            let diffY = targetY - currentY;
+            // Wrap to shortest angle
+            while (diffY > Math.PI) diffY -= Math.PI * 2;
+            while (diffY < -Math.PI) diffY += Math.PI * 2;
+            targetRotation = { x: targetX, y: currentY + diffY };
+            // Pause auto-rotation during navigation
+            if (navPauseTimeout) clearTimeout(navPauseTimeout);
+            navPauseTimeout = setTimeout(() => { targetRotation = null; }, 2500);
+        }
+
+        cities.forEach((city, idx) => {
+            const el = document.createElement('span');
+            el.className = "city-tag";
+            el.textContent = city.name;
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', () => {
+                navigateToCity(city);
+                // Highlight active tag
+                listContainer.querySelectorAll('.city-tag').forEach(t => t.style.background = 'rgba(255,255,255,0.08)');
+                el.style.background = 'rgba(0,255,255,0.3)';
+            });
+            listContainer.appendChild(el);
+        });
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
+        document.body.appendChild(renderer.domElement);
+
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsVertices = [];
+        for (let i = 0; i < 6000; i++) {
+            starsVertices.push((Math.random() - 0.5) * 1200, (Math.random() - 0.5) * 1200, (Math.random() - 0.5) * 1200);
+        }
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        scene.add(new THREE.Points(starsGeometry, new THREE.PointsMaterial({ color: 0xffffff, size: 0.05 })));
+
+        scene.add(new THREE.AmbientLight(0x222244, 0.4));
+        const sun = new THREE.DirectionalLight(0xffeedd, 1.5);
+        sun.position.set(10, 5, 10);
+        scene.add(sun);
+        let sunAngle = 45; // degrees
+        const sunSlider = document.getElementById('sunSlider');
+        sunSlider.addEventListener('input', (e) => {
+            sunAngle = parseFloat(e.target.value);
+        });
+        // Play/pause auto-advance
+        let sunPlaying = false, sunInterval = null;
+        let sunSpeed = 1.0;
+        document.getElementById('sunSpeedSlider').addEventListener('input', (e) => {
+            sunSpeed = parseInt(e.target.value) / 100;
+            document.getElementById('sunSpeedLabel').textContent = sunSpeed.toFixed(1) + 'x';
+        });
+        document.getElementById('sunPlayBtn').addEventListener('click', () => {
+            sunPlaying = !sunPlaying;
+            document.getElementById('sunPlayBtn').textContent = sunPlaying ? '⏸️' : '▶️';
+            if (sunPlaying) {
+                sunInterval = setInterval(() => {
+                    sunAngle = (sunAngle + 1.5 * sunSpeed) % 360;
+                    sunSlider.value = sunAngle;
+                    sunSlider.dispatchEvent(new Event('input'));
+                }, 50);
+            } else {
+                clearInterval(sunInterval);
+            }
+        });
+
+        const earthGroup = new THREE.Group();
+        scene.add(earthGroup);
+
+        const loader = new THREE.TextureLoader();
+        const maxAniso = renderer.capabilities.getMaxAnisotropy();
+        const earthMap = loader.load('https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg');
+        earthMap.anisotropy = maxAniso;
+        const earthSpec = loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg');
+        earthSpec.anisotropy = maxAniso;
+
+        const globe = new THREE.Mesh(
+            new THREE.SphereGeometry(5, 128, 128),
+            new THREE.MeshPhongMaterial({ map: earthMap, specularMap: earthSpec, shininess: 10, transparent: true, opacity: 1.0 })
+        );
+        earthGroup.add(globe);
+
+        // Night city lights layer (NASA Earth at Night)
+        const nightLightsMap = loader.load('https://unpkg.com/three-globe@2.41.12/example/img/earth-night.jpg');
+        nightLightsMap.anisotropy = maxAniso;
+        const nightLightsMat = new THREE.MeshBasicMaterial({
+            map: nightLightsMap,
+            transparent: true,
+            opacity: 1.2,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const nightLightsGlobe = new THREE.Mesh(
+            new THREE.SphereGeometry(5.005, 128, 128),
+            nightLightsMat
+        );
+        earthGroup.add(nightLightsGlobe);
+
+        // Atmosphere glow (Fresnel edge shader)
+        const atmosGlowMat = new THREE.ShaderMaterial({
+            vertexShader: `
+                varying vec3 vNormal;
+                varying vec3 vPosition;
+                void main() {
+                    vNormal = normalize(normalMatrix * normal);
+                    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vNormal;
+                varying vec3 vPosition;
+                void main() {
+                    vec3 viewDir = normalize(-vPosition);
+                    float rim = 1.0 - max(0.0, dot(viewDir, vNormal));
+                    float intensity = pow(rim, 2.5) * 1.2;
+                    vec3 color = mix(vec3(0.3, 0.6, 1.0), vec3(0.6, 0.85, 1.0), rim);
+                    gl_FragColor = vec4(color, intensity * 0.7);
+                }
+            `,
+            transparent: true,
+            side: THREE.BackSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const atmosGlow = new THREE.Mesh(
+            new THREE.SphereGeometry(5.4, 64, 64),
+            atmosGlowMat
+        );
+        earthGroup.add(atmosGlow);
+
+        // Cloud layer
+        const cloudMap = loader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Solarsystemscope_texture_2k_earth_clouds.jpg/1280px-Solarsystemscope_texture_2k_earth_clouds.jpg');
+        const cloudMat = new THREE.MeshPhongMaterial({
+            map: cloudMap,
+            transparent: true,
+            opacity: 0.15,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+            blending: THREE.NormalBlending
+        });
+        const cloudMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(5.12, 64, 64),
+            cloudMat
+        );
+        earthGroup.add(cloudMesh);
+
+        // Globe transparency slider
+        document.getElementById('globeOpacitySlider').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value) / 100;
+            document.getElementById('globeOpacityLabel').textContent = e.target.value;
+            globe.material.opacity = val;
+            nightLightsMat.opacity = val * 1.2;
+        });
+
+        function latLonToVector3(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta));
+        }
+
+        function createTextLabel(text) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 128;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.font = 'Bold 44px Inter, Arial, sans-serif';
+            context.fillStyle = '#ffffff';
+            context.textAlign = 'center';
+            context.shadowColor = 'rgba(0,0,0,0.9)';
+            context.shadowBlur = 12;
+            context.fillText(text, 256, 82);
+            context.shadowBlur = 6;
+            context.fillText(text, 256, 82);
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(2.4, 0.6, 1);
+            sprite.renderOrder = 999;
+            return sprite;
+        }
+
+        const labelsGroup = new THREE.Group();
+        labelsGroup.visible = isLabelsActive;
+        earthGroup.add(labelsGroup);
+
+        const flightRadius = 5.35; 
+        const cityDots = [];
+        // Create day and night dot textures
+        function createDotTexture(color, size) {
+            const c = document.createElement('canvas');
+            c.width = 32; c.height = 32;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(16, 16, 0, 16, 16, size);
+            g.addColorStop(0, color);
+            g.addColorStop(0.5, color.replace('1)', '0.5)'));
+            g.addColorStop(1, 'transparent');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 32, 32);
+            return new THREE.CanvasTexture(c);
+        }
+        const dayDotTex = createDotTexture('rgba(255,255,255,1)', 10);
+        const nightDotTex = createDotTexture('rgba(255,220,80,1)', 14);
+
+        const splinePoints = [];
+        for (let i = 0; i < cities.length; i++) {
+            const current = cities[i];
+            const next = cities[(i + 1) % cities.length];
+            const segments = 30;
+            for (let j = 0; j < segments; j++) {
+                const t = j / segments;
+                const lerpLat = current.lat + (next.lat - current.lat) * t;
+                let diffLon = next.lon - current.lon;
+                if (diffLon > 180) diffLon -= 360;
+                if (diffLon < -180) diffLon += 360;
+                const lerpLon = current.lon + diffLon * t;
+                splinePoints.push(latLonToVector3(lerpLat, lerpLon, flightRadius));
+            }
+            const posMarker = latLonToVector3(current.lat, current.lon, 5.05);
+            const dotMat = new THREE.SpriteMaterial({ map: dayDotTex, transparent: true, depthTest: false, opacity: 0.9 });
+            const dotSprite = new THREE.Sprite(dotMat);
+            dotSprite.scale.set(0.06, 0.06, 1);
+            dotSprite.position.copy(posMarker);
+            dotSprite.renderOrder = 998;
+            earthGroup.add(dotSprite);
+            cityDots.push({ sprite: dotSprite, mat: dotMat, lat: current.lat, lon: current.lon });
+            const label = createTextLabel(current.name);
+            label.position.copy(latLonToVector3(current.lat, current.lon, 5.75));
+            labelsGroup.add(label);
+        }
+
+        const curve = new THREE.CatmullRomCurve3(splinePoints, true);
+        
+        // Genişliği 1.600 km olacak şekilde güncelledim (~0.77 birim)
+        let corridorRadius = 0.77; 
+        let corridor = new THREE.Mesh(
+            new THREE.TubeGeometry(curve, 600, corridorRadius, 20, true),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
+        );
+        earthGroup.add(corridor);
+
+        // === DNA DOUBLE HELIX ENERGY FLOW ===
+        const pipelineGroup = new THREE.Group();
+        pipelineGroup.visible = isEnergyActive;
+        earthGroup.add(pipelineGroup);
+
+        // Build two helical strands around the corridor center curve
+        const helixFrequency = 12;
+        const helixRadius = 0.18;
+        const helixSamples = 800;
+
+        function buildHelixPoints(phaseOffset) {
+            const points = [];
+            for (let i = 0; i <= helixSamples; i++) {
+                const t = i / helixSamples;
+                const pos = curve.getPointAt(t);
+                const tangent = curve.getTangentAt(t).normalize();
+                const up = pos.clone().normalize();
+                const right = new THREE.Vector3().crossVectors(tangent, up).normalize();
+                const localUp = new THREE.Vector3().crossVectors(right, tangent).normalize();
+                const angle = t * helixFrequency * Math.PI * 2 + phaseOffset;
+                const offset = right.clone().multiplyScalar(Math.cos(angle) * helixRadius)
+                    .add(localUp.clone().multiplyScalar(Math.sin(angle) * helixRadius));
+                points.push(pos.clone().add(offset));
+            }
+            return points;
+        }
+
+        const strand1Points = buildHelixPoints(0);
+        const strand2Points = buildHelixPoints(Math.PI);
+        const strand1Curve = new THREE.CatmullRomCurve3(strand1Points, false);
+        const strand2Curve = new THREE.CatmullRomCurve3(strand2Points, false);
+
+        // Energy particle texture
+        function createEnergyParticle(color) {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            const col = new THREE.Color(color);
+            const r = Math.round(col.r * 255), gv = Math.round(col.g * 255), b = Math.round(col.b * 255);
+            const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 28);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.15, `rgba(${r},${gv},${b},1)`);
+            g.addColorStop(0.5, `rgba(${r},${gv},${b},0.6)`);
+            g.addColorStop(1, `rgba(${r},${gv},${b},0)`);
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(c);
+        }
+
+        // (DNA tubes and cross-links removed — only flowing particles trace the helix path)
+
+        // Energy flow particles on both strands
+        const energyParticles = [];
+        const tex1 = createEnergyParticle(0xffaa00);
+        const tex2 = createEnergyParticle(0x00ddff);
+
+        function createHelixParticles(strandCurve, tex, count) {
+            for (let i = 0; i < count; i++) {
+                const pMat = new THREE.SpriteMaterial({
+                    map: tex, transparent: true, opacity: 1,
+                    depthTest: false, blending: THREE.AdditiveBlending
+                });
+                const pSprite = new THREE.Sprite(pMat);
+                const size = 0.05 + Math.random() * 0.04;
+                pSprite.scale.set(size, size, 1);
+                pSprite.renderOrder = 997;
+                pipelineGroup.add(pSprite);
+                energyParticles.push({
+                    sprite: pSprite, mat: pMat, curve: strandCurve,
+                    t: Math.random(), speed: 0.0006 + Math.random() * 0.0012,
+                    baseOpacity: 0.8 + Math.random() * 0.2,
+                    originalSize: size
+                });
+            }
+        }
+        createHelixParticles(strand1Curve, tex1, 80);
+        createHelixParticles(strand2Curve, tex2, 80);
+        // Reverse direction energy flow (same strands, opposite direction)
+        function createReverseHelixParticles(strandCurve, tex, count) {
+            for (let i = 0; i < count; i++) {
+                const pMat = new THREE.SpriteMaterial({
+                    map: tex, transparent: true, opacity: 1,
+                    depthTest: false, blending: THREE.AdditiveBlending
+                });
+                const pSprite = new THREE.Sprite(pMat);
+                const size = 0.04 + Math.random() * 0.035;
+                pSprite.scale.set(size, size, 1);
+                pSprite.renderOrder = 997;
+                pipelineGroup.add(pSprite);
+                energyParticles.push({
+                    sprite: pSprite, mat: pMat, curve: strandCurve,
+                    t: Math.random(), speed: -(0.0005 + Math.random() * 0.001),
+                    baseOpacity: 0.7 + Math.random() * 0.2,
+                    originalSize: size
+                });
+            }
+        }
+        createReverseHelixParticles(strand1Curve, tex2, 60);
+        createReverseHelixParticles(strand2Curve, tex1, 60);
+
+        // DNA Cross-Bridge Rungs (connecting strand1 to strand2)
+        const dnaBridges = [];
+        const bridgeTex = createEnergyParticle(0xffffff);
+        const bridgeCount = 50;
+        for (let i = 0; i < bridgeCount; i++) {
+            const baseT = i / bridgeCount;
+            // Each bridge has 3 dots along the connection
+            const dots = [];
+            for (let d = 0; d < 3; d++) {
+                const bMat = new THREE.SpriteMaterial({
+                    map: d === 1 ? bridgeTex : (d === 0 ? tex1 : tex2),
+                    transparent: true, opacity: 0.8,
+                    depthTest: false, blending: THREE.AdditiveBlending
+                });
+                const bSprite = new THREE.Sprite(bMat);
+                const sz = d === 1 ? 0.04 : 0.025;
+                bSprite.scale.set(sz, sz, 1);
+                bSprite.renderOrder = 996;
+                pipelineGroup.add(bSprite);
+                dots.push({ sprite: bSprite, mat: bMat, frac: d / 2, size: sz });
+            }
+            dnaBridges.push({ baseT, dots });
+        }
+
+        // === CENTRIFUGAL ENERGY RADIALS (land only) ===
+        const centrifugalParticles = [];
+        const centrifugalCount = 120;
+        const globeRad = 5.12;
+
+        // Check if a longitude is over land along the corridor
+        function isOverLand(lon) {
+            // Land ranges along corridor (~lat 35-45)
+            // Spain to Japan/Korea: -10 to 145
+            // Americas: -130 to -60
+            if (lon >= -10 && lon <= 145) return true;  // Eurasia
+            if (lon >= -130 && lon <= -60) return true;  // Americas
+            return false;
+        }
+
+        function findLandHelixT(strandCurve) {
+            // Try random t values until one is over land
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const t = Math.random();
+                const pos = strandCurve.getPointAt(t);
+                // Convert position back to approximate longitude
+                const phi = Math.atan2(pos.x, pos.z);
+                const lon = -(phi * 180 / Math.PI) - 180;
+                const normLon = ((lon % 360) + 540) % 360 - 180;
+                if (isOverLand(normLon)) return t;
+            }
+            return Math.random() * 0.4 + 0.1; // fallback: Eurasia section
+        }
+
+        for (let i = 0; i < centrifugalCount; i++) {
+            const isS1 = i % 2 === 0;
+            const tex = isS1 ? tex1 : tex2;
+            const strand = isS1 ? strand1Curve : strand2Curve;
+            const pMat = new THREE.SpriteMaterial({
+                map: tex, transparent: true, opacity: 0,
+                depthTest: false, blending: THREE.AdditiveBlending
+            });
+            const pSprite = new THREE.Sprite(pMat);
+            const size = 0.025 + Math.random() * 0.025;
+            pSprite.scale.set(size, size, 1);
+            pSprite.renderOrder = 996;
+            pipelineGroup.add(pSprite);
+
+            centrifugalParticles.push({
+                sprite: pSprite, mat: pMat,
+                helixT: findLandHelixT(strand),
+                progress: Math.random(),
+                speed: 0.003 + Math.random() * 0.005,
+                maxDist: 0.4 + Math.random() * 0.8,
+                spinDir: (Math.random() > 0.5 ? 1 : -1),
+                spinAmount: 0.3 + Math.random() * 0.6,
+                strand: strand,
+                size: size
+            });
+        }
+
+
+        // FlightRadar24 style airplane icon texture
+        function createAirplaneTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+            
+            // Glow behind the plane
+            const glow = ctx.createRadialGradient(64, 64, 0, 64, 64, 50);
+            glow.addColorStop(0, 'rgba(0, 255, 255, 0.4)');
+            glow.addColorStop(0.5, 'rgba(0, 200, 255, 0.15)');
+            glow.addColorStop(1, 'rgba(0, 150, 255, 0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, 128, 128);
+
+            // Draw airplane silhouette pointing UP (base orientation)
+            ctx.save();
+            ctx.translate(64, 64);
+            ctx.fillStyle = '#00ffff';
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 8;
+
+            // Fuselage
+            ctx.beginPath();
+            ctx.moveTo(0, -30);
+            ctx.lineTo(4, -15);
+            ctx.lineTo(4, 20);
+            ctx.lineTo(2, 28);
+            ctx.lineTo(-2, 28);
+            ctx.lineTo(-4, 20);
+            ctx.lineTo(-4, -15);
+            ctx.closePath();
+            ctx.fill();
+
+            // Main wings
+            ctx.beginPath();
+            ctx.moveTo(-3, -2);
+            ctx.lineTo(-26, 8);
+            ctx.lineTo(-26, 12);
+            ctx.lineTo(-3, 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(3, -2);
+            ctx.lineTo(26, 8);
+            ctx.lineTo(26, 12);
+            ctx.lineTo(3, 6);
+            ctx.closePath();
+            ctx.fill();
+
+            // Tail wings
+            ctx.beginPath();
+            ctx.moveTo(-2, 22);
+            ctx.lineTo(-12, 28);
+            ctx.lineTo(-12, 30);
+            ctx.lineTo(-2, 26);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(2, 22);
+            ctx.lineTo(12, 28);
+            ctx.lineTo(12, 30);
+            ctx.lineTo(2, 26);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+            return new THREE.CanvasTexture(canvas);
+        }
+        const planeTex = createAirplaneTexture();
+
+        // Night airplane texture: semi-transparent body + 4 nav lights
+        function createNightAirplaneTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+
+            // Very faint airplane outline
+            ctx.save();
+            ctx.translate(64, 64);
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.12)';
+
+            // Fuselage
+            ctx.beginPath();
+            ctx.moveTo(0, -30); ctx.lineTo(4, -15); ctx.lineTo(4, 20);
+            ctx.lineTo(2, 28); ctx.lineTo(-2, 28); ctx.lineTo(-4, 20);
+            ctx.lineTo(-4, -15); ctx.closePath(); ctx.fill();
+            // Wings
+            ctx.beginPath();
+            ctx.moveTo(-3, -2); ctx.lineTo(-26, 8); ctx.lineTo(-26, 12); ctx.lineTo(-3, 6);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(3, -2); ctx.lineTo(26, 8); ctx.lineTo(26, 12); ctx.lineTo(3, 6);
+            ctx.closePath(); ctx.fill();
+            // Tail
+            ctx.beginPath();
+            ctx.moveTo(-2, 22); ctx.lineTo(-12, 28); ctx.lineTo(-12, 30); ctx.lineTo(-2, 26);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(2, 22); ctx.lineTo(12, 28); ctx.lineTo(12, 30); ctx.lineTo(2, 26);
+            ctx.closePath(); ctx.fill();
+
+            // 4 Navigation lights
+            ctx.shadowBlur = 12;
+
+            // Cockpit light (white, front)
+            ctx.shadowColor = '#ffffff';
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, -28, 3, 0, Math.PI * 2); ctx.fill();
+
+            // Tail light (red, back)
+            ctx.shadowColor = '#ff3333';
+            ctx.fillStyle = '#ff4444';
+            ctx.beginPath(); ctx.arc(0, 28, 3, 0, Math.PI * 2); ctx.fill();
+
+            // Left wing light (green - port)
+            ctx.shadowColor = '#00ff00';
+            ctx.fillStyle = '#00ff44';
+            ctx.beginPath(); ctx.arc(-25, 10, 3, 0, Math.PI * 2); ctx.fill();
+
+            // Right wing light (red - starboard)
+            ctx.shadowColor = '#ff0000';
+            ctx.fillStyle = '#ff2222';
+            ctx.beginPath(); ctx.arc(25, 10, 3, 0, Math.PI * 2); ctx.fill();
+
+            ctx.restore();
+            return new THREE.CanvasTexture(canvas);
+        }
+        const nightPlaneTex = createNightAirplaneTexture();
+
+        function createAirplaneSprite() {
+            const dayMat = new THREE.SpriteMaterial({ 
+                map: planeTex, 
+                transparent: true, 
+                opacity: 1, 
+                depthTest: false,
+                sizeAttenuation: true,
+                blending: THREE.AdditiveBlending
+            });
+            const nightMat = new THREE.SpriteMaterial({ 
+                map: nightPlaneTex, 
+                transparent: true, 
+                opacity: 1, 
+                depthTest: false,
+                sizeAttenuation: true,
+                blending: THREE.AdditiveBlending
+            });
+            const sprite = new THREE.Sprite(dayMat);
+            sprite.scale.set(0.28, 0.28, 1);
+            sprite.renderOrder = 998;
+            return { sprite, dayMat, nightMat };
+        }
+
+        const totalPlanes = 200;
+        const planes = [];
+        for (let i = 0; i < totalPlanes; i++) {
+            const { sprite, dayMat, nightMat } = createAirplaneSprite();
+            earthGroup.add(sprite);
+            const direction = i % 2 === 0 ? 1 : -1;
+            const isDrifter = i > totalPlanes * 0.8;
+            planes.push({ 
+                mesh: sprite, dayMat, nightMat, mat: dayMat, offset: Math.random(), 
+                speed: 0.00015 + Math.random() * 0.0005, direction: direction,
+                lateralOffset: isDrifter ? (Math.random() - 0.5) * 0.1 : (Math.random() - 0.5) * 0.15,
+                driftSpeed: isDrifter ? (Math.random() - 0.5) * 0.003 : 0,
+                maxDrift: isDrifter ? 0.7 + Math.random() * 0.3 : 0.4,
+                isDrifter: isDrifter
+            });
+        }
+
+        // Dispersal planes: fly outward from city points, fade when leaving corridor
+        const dispersalPlanes = [];
+        const dispersalCount = 80;
+        for (let i = 0; i < dispersalCount; i++) {
+            const { sprite, dayMat, nightMat } = createAirplaneSprite();
+            sprite.scale.set(0.2, 0.2, 1);
+            earthGroup.add(sprite);
+            const cityIdx = i % cities.length;
+            const city = cities[cityIdx];
+            const originPos = latLonToVector3(city.lat, city.lon, flightRadius);
+            // Random outward angle
+            const angle = Math.random() * Math.PI * 2;
+            const maxRange = 0.6 + Math.random() * 0.5; // how far it flies out
+            dispersalPlanes.push({
+                sprite, dayMat, nightMat, mat: dayMat, originPos,
+                angle, maxRange,
+                progress: Math.random(), // 0 = at city, 1 = max range
+                speed: 0.002 + Math.random() * 0.004,
+                cityLat: city.lat, cityLon: city.lon
+            });
+        }
+
+        // Breakaway planes: peel off from random points along the main corridor
+        const breakawayPlanes = [];
+        const breakawayCount = 100;
+        for (let i = 0; i < breakawayCount; i++) {
+            const { sprite, dayMat, nightMat } = createAirplaneSprite();
+            sprite.scale.set(0.18, 0.18, 1);
+            earthGroup.add(sprite);
+            const curveT = Math.random(); // random position on corridor
+            // Departure angle: shallow diagonal (not steep perpendicular)
+            const sign = Math.random() > 0.5 ? 1 : -1;
+            const departAngle = sign * (0.15 + Math.random() * 0.35) * Math.PI; // 27°-90° range, mostly shallow
+            breakawayPlanes.push({
+                sprite, dayMat, nightMat, mat: dayMat,
+                curveT,
+                departAngle,
+                progress: Math.random(),
+                speed: 0.001 + Math.random() * 0.003,
+                maxDist: 0.4 + Math.random() * 0.6
+            });
+        }
+
+        // === MARITIME CARGO SHIP TRAFFIC (ocean only) ===
+        function createShipTexture() {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            // Hull (dark grey, elongated)
+            ctx.fillStyle = '#556';
+            ctx.beginPath();
+            ctx.moveTo(32, 8);  // bow
+            ctx.lineTo(42, 20);
+            ctx.lineTo(42, 52);
+            ctx.lineTo(38, 56); // stern
+            ctx.lineTo(26, 56);
+            ctx.lineTo(22, 52);
+            ctx.lineTo(22, 20);
+            ctx.closePath();
+            ctx.fill();
+            // Container rows
+            ctx.fillStyle = '#e44';
+            ctx.fillRect(25, 22, 14, 5);
+            ctx.fillStyle = '#48e';
+            ctx.fillRect(25, 28, 14, 5);
+            ctx.fillStyle = '#ea4';
+            ctx.fillRect(25, 34, 14, 5);
+            // Bridge
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(28, 44, 8, 6);
+            // Bow light
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath(); ctx.arc(32, 10, 2, 0, Math.PI * 2); ctx.fill();
+            // Wake glow
+            ctx.fillStyle = 'rgba(100,200,255,0.15)';
+            ctx.beginPath();
+            ctx.moveTo(26, 56); ctx.lineTo(20, 64); ctx.lineTo(44, 64); ctx.lineTo(38, 56);
+            ctx.closePath(); ctx.fill();
+            return new THREE.CanvasTexture(c);
+        }
+
+        const shipTex = createShipTexture();
+        const shipRadius = 5.08; // just above globe surface
+        const ships = [];
+        const shipCount = 40;
+
+        // Find ocean-only t values on the main corridor
+        function findOceanT() {
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const t = Math.random();
+                const pos = curve.getPointAt(t);
+                // Correct inverse of latLonToVector3: theta = atan2(z, -x), lon = theta*180/PI - 180
+                const theta = Math.atan2(pos.z, -pos.x);
+                const lon = theta * 180 / Math.PI - 180;
+                const normLon = ((lon % 360) + 540) % 360 - 180;
+                if (!isOverLand(normLon)) return t; // ocean!
+            }
+            return 0.65 + Math.random() * 0.2; // fallback: Pacific
+        }
+
+        for (let i = 0; i < shipCount; i++) {
+            const mat = new THREE.SpriteMaterial({
+                map: shipTex, transparent: true, opacity: 0.9,
+                depthTest: false, sizeAttenuation: true
+            });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(0.15, 0.15, 1);
+            sprite.renderOrder = 998;
+            earthGroup.add(sprite);
+            const direction = i % 2 === 0 ? 1 : -1;
+            ships.push({
+                sprite, mat,
+                offset: findOceanT(),
+                speed: 0.00005 + Math.random() * 0.0001, // much slower than planes
+                direction,
+                lateralOffset: (Math.random() - 0.5) * 0.06
+            });
+        }
+
+        // === LAND VEHICLES: TRAINS + TRUCKS (Eurasia corridor only) ===
+        function createTrainTexture() {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            // Locomotive body
+            ctx.fillStyle = '#2a7';
+            ctx.fillRect(24, 8, 16, 40);
+            // Windows
+            ctx.fillStyle = '#ff0';
+            ctx.fillRect(27, 12, 4, 3); ctx.fillRect(33, 12, 4, 3);
+            ctx.fillRect(27, 18, 4, 3); ctx.fillRect(33, 18, 4, 3);
+            // Freight wagons
+            ctx.fillStyle = '#555';
+            ctx.fillRect(26, 30, 12, 8);
+            ctx.fillStyle = '#744';
+            ctx.fillRect(26, 39, 12, 7);
+            // Headlight
+            ctx.fillStyle = '#ff8';
+            ctx.beginPath(); ctx.arc(32, 8, 2, 0, Math.PI * 2); ctx.fill();
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createTruckTexture() {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            // Trailer
+            ctx.fillStyle = '#36c';
+            ctx.fillRect(25, 14, 14, 26);
+            // Cab
+            ctx.fillStyle = '#c33';
+            ctx.fillRect(27, 40, 10, 12);
+            // Windshield
+            ctx.fillStyle = '#adf';
+            ctx.fillRect(29, 42, 6, 4);
+            // Headlights
+            ctx.fillStyle = '#ff8';
+            ctx.beginPath(); ctx.arc(30, 52, 1.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(34, 52, 1.5, 0, Math.PI * 2); ctx.fill();
+            return new THREE.CanvasTexture(c);
+        }
+
+        const trainTex = createTrainTexture();
+        const truckTex = createTruckTexture();
+        const landVehicleRadius = 5.06;
+        const landVehicles = [];
+
+        // Extract lat/lon from a 3D point on the curve
+        function posToLatLon(pos) {
+            const r = pos.length();
+            const lat = 90 - Math.acos(pos.y / r) * 180 / Math.PI;
+            const theta = Math.atan2(pos.z, -pos.x);
+            const lon = ((theta * 180 / Math.PI - 180) % 360 + 540) % 360 - 180;
+            return { lat, lon };
+        }
+
+        // Only Eurasia land (excluding Mediterranean, Black Sea, Caspian)
+        function isEurasiaLandLL(lat, lon) {
+            if (lon < -10 || lon > 145) return false;
+            // Mediterranean gap: lon -5 to 10, lat 34-44
+            if (lon >= -5 && lon <= 10 && lat >= 34 && lat <= 44) return false;
+            // Black Sea gap: lon 28-42, lat 41-46
+            if (lon >= 28 && lon <= 42 && lat >= 41 && lat <= 46) return false;
+            // Caspian gap: lon 48-55, lat 36-47
+            if (lon >= 48 && lon <= 55 && lat >= 36 && lat <= 47) return false;
+            return true;
+        }
+
+        function findEurasiaLandT() {
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const t = Math.random();
+                const pos = curve.getPointAt(t);
+                const ll = posToLatLon(pos);
+                if (isEurasiaLandLL(ll.lat, ll.lon)) return t;
+            }
+            return 0.15 + Math.random() * 0.3; // fallback
+        }
+
+        // Snake Trains (locomotive + wagons following the curve)
+        const snakeTrains = [];
+        const wagonCount = 5; // 1 locomotive + 4 wagons
+        const wagonSpacing = 0.003; // t-offset between wagons
+        for (let i = 0; i < 8; i++) {
+            const wagons = [];
+            const baseT = findEurasiaLandT();
+            const dir = i % 2 === 0 ? 1 : -1;
+            const speed = 0.00007 + Math.random() * 0.00008;
+            const latOff = (Math.random() - 0.5) * 0.03;
+            for (let w = 0; w < wagonCount; w++) {
+                const isLoco = (w === 0);
+                const mat = new THREE.SpriteMaterial({
+                    map: isLoco ? trainTex : truckTex,
+                    transparent: true, opacity: 0.9,
+                    depthTest: false, sizeAttenuation: true
+                });
+                const sprite = new THREE.Sprite(mat);
+                sprite.scale.set(isLoco ? 0.10 : 0.08, isLoco ? 0.10 : 0.08, 1);
+                sprite.renderOrder = 998;
+                earthGroup.add(sprite);
+                wagons.push({ sprite, mat, isLoco });
+            }
+            snakeTrains.push({
+                wagons, baseOffset: baseT, speed, direction: dir,
+                lateralOffset: latOff, scaledVisible: true
+            });
+        }
+        // Trucks
+        for (let i = 0; i < 35; i++) {
+            const mat = new THREE.SpriteMaterial({
+                map: truckTex, transparent: true, opacity: 0.85,
+                depthTest: false, sizeAttenuation: true
+            });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(0.07, 0.07, 1);
+            sprite.renderOrder = 998;
+            earthGroup.add(sprite);
+            landVehicles.push({
+                sprite, mat, type: 'truck',
+                offset: findEurasiaLandT(),
+                speed: 0.00006 + Math.random() * 0.0001,
+                direction: i % 2 === 0 ? 1 : -1,
+                lateralOffset: (Math.random() - 0.5) * 0.05,
+                wavePhase: Math.random() * Math.PI * 2
+            });
+        }
+
+        // === NEW CORRIDOR ROUTES (as separate layers) ===
+        // Store all sub-corridor objects for animate loop
+        const allSubCorridors = [];
+
+        function createCorridorRoute(routeCities, color, tubeOpacity) {
+            const group = new THREE.Group();
+            const routeLabels = new THREE.Group();
+            const routeRadius = 5.3;
+            const pts = [];
+            for (let i = 0; i < routeCities.length - 1; i++) {
+                const cur = routeCities[i];
+                const next = routeCities[i + 1];
+                const segs = 20;
+                for (let j = 0; j < segs; j++) {
+                    const t = j / segs;
+                    const lat = cur.lat + (next.lat - cur.lat) * t;
+                    let dLon = next.lon - cur.lon;
+                    if (dLon > 180) dLon -= 360;
+                    if (dLon < -180) dLon += 360;
+                    const lon = cur.lon + dLon * t;
+                    pts.push(latLonToVector3(lat, lon, routeRadius));
+                }
+            }
+            const lastC = routeCities[routeCities.length - 1];
+            pts.push(latLonToVector3(lastC.lat, lastC.lon, routeRadius));
+            for (let i = 0; i < routeCities.length; i++) {
+                const cur = routeCities[i];
+                const mpos = latLonToVector3(cur.lat, cur.lon, 5.05);
+                const marker = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.025, 10, 10),
+                    new THREE.MeshBasicMaterial({ color: color })
+                );
+                marker.position.copy(mpos);
+                group.add(marker);
+                if (cur.name) {
+                    const lbl = createTextLabel(cur.name);
+                    lbl.position.copy(latLonToVector3(cur.lat, cur.lon, 5.65));
+                    routeLabels.add(lbl);
+                }
+            }
+            const routeCurve = new THREE.CatmullRomCurve3(pts, false);
+            const tube = new THREE.Mesh(
+                new THREE.TubeGeometry(routeCurve, 300, 0.35, 12, false),
+                new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: tubeOpacity, side: THREE.DoubleSide })
+            );
+            group.add(tube);
+            group.add(routeLabels);
+
+            // --- Traffic: 10 small planes along corridor ---
+            const corridorPlanes = [];
+            for (let i = 0; i < 10; i++) {
+                const { sprite, dayMat, nightMat } = createAirplaneSprite();
+                sprite.scale.set(0.2, 0.2, 1);
+                group.add(sprite);
+                corridorPlanes.push({
+                    mesh: sprite, dayMat, nightMat, mat: dayMat,
+                    offset: Math.random(),
+                    speed: 0.0002 + Math.random() * 0.0004,
+                    direction: i % 2 === 0 ? 1 : -1,
+                    lateralOffset: (Math.random() - 0.5) * 0.08
+                });
+            }
+
+            // --- Energy: 15 glowing particles along corridor ---
+            const energyGroup = new THREE.Group();
+            const corridorEnergy = [];
+            const hexColor = new THREE.Color(color);
+            for (let i = 0; i < 15; i++) {
+                const eMat = new THREE.SpriteMaterial({
+                    color: hexColor,
+                    transparent: true, opacity: 0.7,
+                    blending: THREE.AdditiveBlending,
+                    depthTest: false
+                });
+                const eSprite = new THREE.Sprite(eMat);
+                const sz = 0.02 + Math.random() * 0.02;
+                eSprite.scale.set(sz, sz, 1);
+                eSprite.renderOrder = 996;
+                energyGroup.add(eSprite);
+                corridorEnergy.push({
+                    sprite: eSprite, mat: eMat,
+                    offset: Math.random(),
+                    speed: 0.001 + Math.random() * 0.003,
+                    direction: i % 2 === 0 ? 1 : -1
+                });
+            }
+            group.add(energyGroup);
+
+            earthGroup.add(group);
+
+            const result = { group, tube, labels: routeLabels, curve: routeCurve, planes: corridorPlanes, energy: corridorEnergy, energyGroup };
+            allSubCorridors.push(result);
+            return result;
+        }
+
+        const atlantikCities = [
+            { name: "Vaşington", lat: 38.9, lon: -77.0 },
+            { name: "Karakas", lat: 10.5, lon: -66.9 },
+            { name: "Belem", lat: -1.5, lon: -48.5 },
+            { name: "Rio de Janeiro", lat: -22.9, lon: -43.2 }
+        ];
+        const atlantikRoute = createCorridorRoute(atlantikCities, 0x22cc66, 0.15);
+
+        const akdenizCities = [
+            { name: "Budapeşte", lat: 47.5, lon: 19.0 },
+            { name: "", lat: 39.9, lon: 32.9 },
+            { name: "Kahire", lat: 30.0, lon: 31.2 },
+            { name: "Hartum", lat: 15.6, lon: 32.5 },
+            { name: "Mogadişu", lat: 2.0, lon: 45.3 },
+            { name: "Dar es Salaam", lat: -6.8, lon: 39.3 },
+            { name: "Antananarivo", lat: -18.9, lon: 47.5 },
+            { name: "Cape Town", lat: -33.9, lon: 18.4 }
+        ];
+        const akdenizRoute = createCorridorRoute(akdenizCities, 0xff8833, 0.15);
+
+        const pasifikCities = [
+            { name: "Ulanbatur", lat: 47.9, lon: 106.9 },
+            { name: "", lat: 36.1, lon: 103.8 },
+            { name: "Hanoi", lat: 21.0, lon: 105.8 },
+            { name: "Tay Nim", lat: 11.3, lon: 106.1 },
+            { name: "Cakarta", lat: -6.2, lon: 106.8 }
+        ];
+        const pasifikRoute = createCorridorRoute(pasifikCities, 0x3399ff, 0.15);
+
+        // Pasifik-Güney Hattı: Tokyo → Cebu → Nabire → Sydney → Tauranga
+        const pasifikGuneyaCities = [
+            { name: "", lat: 35.7, lon: 139.7 },
+            { name: "Tayvan", lat: 25.0, lon: 121.5 },
+            { name: "Cebu", lat: 10.3, lon: 123.9 },
+            { name: "Nabire", lat: -3.4, lon: 135.5 },
+            { name: "Sydney", lat: -33.9, lon: 151.2 },
+            { name: "Tauranga", lat: -37.7, lon: 176.1 }
+        ];
+        const pasifikGuneyRoute = createCorridorRoute(pasifikGuneyaCities, 0x77ff33, 0.15);
+
+        // Amerika Hattı: Alaska → Vancouver → Meksika(kesişim) → Guatemala → Lima → Santiago
+        const amerikaCities = [
+            { name: "San Francisco", lat: 37.8, lon: -122.4 },
+            { name: "", lat: 19.4, lon: -99.1 },
+            { name: "Panama", lat: 9.0, lon: -79.5 },
+            { name: "Lima", lat: -12.0, lon: -77.0 },
+            { name: "Santiago", lat: -33.4, lon: -70.7 }
+        ];
+        const amerikaRoute = createCorridorRoute(amerikaCities, 0xdd44aa, 0.15);
+
+        // Batı Afrika Hattı: Madrid → Casablanca → Dakar → Niamey → Lagos
+        const batiAfrikaCities = [
+            { name: "Londra", lat: 51.5, lon: -0.1 },
+            { name: "", lat: 40.4, lon: -3.7 },
+            { name: "Marakeş", lat: 31.6, lon: -8.0 },
+            { name: "Dakar", lat: 14.7, lon: -17.5 },
+            { name: "Lagos", lat: 6.5, lon: 3.4 },
+            { name: "Luanda", lat: -8.8, lon: 13.2 }
+        ];
+        const batiAfrikaRoute = createCorridorRoute(batiAfrikaCities, 0xccaa22, 0.15);
+
+        // Orta Asya Hattı: Astana → Buhara(kesişim) → Karaçi
+        const ortaAsyaCities = [
+            { name: "Astana", lat: 51.1, lon: 71.4 },
+            { name: "", lat: 39.8, lon: 64.4 },
+            { name: "Karaçi", lat: 24.9, lon: 67.0 },
+            { name: "Kolombo", lat: 6.9, lon: 79.9 }
+        ];
+        const ortaAsyaRoute = createCorridorRoute(ortaAsyaCities, 0x00cccc, 0.15);
+
+        // === TNB (Tüm Noktalar Arası Bağlantı) System ===
+        (function initTNB() {
+            const tnbCities = [
+                {name:'Tokyo', lat:35.68, lon:139.65}, {name:'Seul', lat:37.57, lon:126.98},
+                {name:'Gansu', lat:36.06, lon:103.83}, {name:'Aksu', lat:41.17, lon:80.26},
+                {name:'Buhara', lat:39.77, lon:64.43}, {name:'Bakü', lat:40.41, lon:49.87},
+                {name:'Ankara', lat:39.93, lon:32.86}, {name:'Roma', lat:41.90, lon:12.50},
+                {name:'Madrid', lat:40.42, lon:-3.70}, {name:'Londra', lat:51.5, lon:-0.1},
+                {name:'Budapeşte', lat:47.5, lon:19.0}, {name:'Kahire', lat:30.0, lon:31.2},
+                {name:'Vaşington', lat:38.9, lon:-77.0}, {name:'Karakas', lat:10.5, lon:-66.9},
+                {name:'San Francisco', lat:37.8, lon:-122.4}, {name:'Lima', lat:-12.0, lon:-77.0},
+                {name:'Marakeş', lat:31.6, lon:-8.0}, {name:'Dakar', lat:14.7, lon:-17.5},
+                {name:'Lagos', lat:6.5, lon:3.4}, {name:'Luanda', lat:-8.8, lon:13.2},
+                {name:'Astana', lat:51.1, lon:71.4}, {name:'Karaçi', lat:24.9, lon:67.0},
+                {name:'Honolulu', lat:21.31, lon:-157.86}, {name:'Dar es Salaam', lat:-6.8, lon:39.3},
+                {name:'Santiago', lat:-33.4, lon:-70.7}, {name:'Hanoi', lat:21.0, lon:105.8}
+            ];
+            const tnbFR = 5.18;
+            tnbGroup = new THREE.Group();
+            for (let i = 0; i < tnbCities.length; i++) {
+                for (let j = i + 1; j < tnbCities.length; j++) {
+                    const c1 = tnbCities[i], c2 = tnbCities[j];
+                    const dLat = Math.abs(c1.lat - c2.lat), dLon = Math.abs(c1.lon - c2.lon);
+                    if (dLat < 5 && dLon < 5) continue;
+                    const p1 = latLonToVector3(c1.lat, c1.lon, tnbFR);
+                    const p2 = latLonToVector3(c2.lat, c2.lon, tnbFR);
+                    const mid = p1.clone().add(p2).multiplyScalar(0.5);
+                    const dist = p1.distanceTo(p2);
+                    mid.normalize().multiplyScalar(tnbFR + dist * 0.08);
+                    const cv = new THREE.CatmullRomCurve3([p1, mid, p2]);
+                    const { sprite, dayMat, nightMat } = createAirplaneSprite();
+                    sprite.scale.set(0.12, 0.12, 1);
+                    sprite.visible = false;
+                    tnbGroup.add(sprite);
+                    tnbPairs.push({
+                        sprite, dayMat, nightMat, curve: cv,
+                        offset: Math.random(),
+                        speed: 0.001 + Math.random() * 0.002,
+                        direction: Math.random() > 0.5 ? 1 : -1
+                    });
+                }
+            }
+            earthGroup.add(tnbGroup);
+            document.getElementById('tnbSlider').addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                document.getElementById('tnbLabel').textContent = val;
+                tnbVisibleCount = Math.floor(tnbPairs.length * val / 100);
+                tnbPairs.forEach((p, i) => { p.sprite.visible = i < tnbVisibleCount; });
+            });
+        })();
+
+        // === ORBITING SATELLITES (follow corridor routes) ===
+        const satelliteGroup = new THREE.Group();
+        earthGroup.add(satelliteGroup);
+        let isSatellitesActive = true;
+        const satellites = [];
+        const satAltitude = 5.55;
+
+        function createSatSprite() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const cx = 32, cy = 32;
+            // Glow aura
+            const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 28);
+            glow.addColorStop(0, 'rgba(100,200,255,0.5)');
+            glow.addColorStop(0.35, 'rgba(80,180,255,0.15)');
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, 64, 64);
+            // Satellite body (golden rect)
+            ctx.fillStyle = '#ddc060';
+            ctx.fillRect(cx - 3, cy - 3, 6, 6);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(cx - 3, cy - 3, 6, 6);
+            // Solar panel wings (blue)
+            ctx.fillStyle = '#3366cc';
+            ctx.fillRect(cx - 18, cy - 4, 13, 8);
+            ctx.fillRect(cx + 5, cy - 4, 13, 8);
+            // Panel grid lines
+            ctx.strokeStyle = 'rgba(100,150,255,0.6)';
+            ctx.lineWidth = 0.5;
+            for (let x = cx - 17; x < cx - 5; x += 3) { ctx.beginPath(); ctx.moveTo(x, cy - 3); ctx.lineTo(x, cy + 3); ctx.stroke(); }
+            for (let x = cx + 6; x < cx + 17; x += 3) { ctx.beginPath(); ctx.moveTo(x, cy - 3); ctx.lineTo(x, cy + 3); ctx.stroke(); }
+            // Antenna
+            ctx.strokeStyle = '#ff5555';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx, cy - 3); ctx.lineTo(cx, cy - 9); ctx.stroke();
+            ctx.fillStyle = '#ff3333';
+            ctx.beginPath(); ctx.arc(cx, cy - 9, 1.5, 0, Math.PI * 2); ctx.fill();
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, opacity: 0.9 });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(0.18, 0.18, 1);
+            satelliteGroup.add(sprite);
+            return { sprite, mat };
+        }
+
+        // 18 on Beyaz Kuşak, 3 each on sub-corridors = 36 total
+        const satRoutes = [];
+        for (let i = 0; i < 18; i++) satRoutes.push({ curve: curve });
+        [atlantikRoute, akdenizRoute, pasifikRoute, amerikaRoute, batiAfrikaRoute, pasifikGuneyRoute].forEach(r => {
+            satRoutes.push({ curve: r.curve });
+            satRoutes.push({ curve: r.curve });
+            satRoutes.push({ curve: r.curve });
+        });
+        satRoutes.forEach((sr, i) => {
+            const { sprite, mat } = createSatSprite();
+            const speed = 0.0003 + Math.random() * 0.0005;
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            const offset = Math.random();
+            const wobblePhase = Math.random() * Math.PI * 2;
+            const wobbleAmp = 0.02 + Math.random() * 0.03;
+            satellites.push({ sprite, mat, curve: sr.curve, speed, direction, offset, wobblePhase, wobbleAmp });
+        });
+
+        // Layer references map
+        const layerMap = {
+            bk: { trade: { items: () => [...planes, ...dispersalPlanes, ...breakawayPlanes, ...ships, ...landVehicles] },
+                  energy: { group: pipelineGroup },
+                  cities: { group: labelsGroup },
+                  meb: { mesh: corridor } },
+            at: { trade: { items: () => atlantikRoute.planes.map(p => p) }, energy: { group: atlantikRoute.energyGroup },
+                  cities: { group: atlantikRoute.labels }, meb: { mesh: atlantikRoute.tube } },
+            ak: { trade: { items: () => akdenizRoute.planes.map(p => p) }, energy: { group: akdenizRoute.energyGroup },
+                  cities: { group: akdenizRoute.labels }, meb: { mesh: akdenizRoute.tube } },
+            pa: { trade: { items: () => pasifikRoute.planes.map(p => p) }, energy: { group: pasifikRoute.energyGroup },
+                  cities: { group: pasifikRoute.labels }, meb: { mesh: pasifikRoute.tube } },
+            am: { trade: { items: () => amerikaRoute.planes.map(p => p) }, energy: { group: amerikaRoute.energyGroup },
+                  cities: { group: amerikaRoute.labels }, meb: { mesh: amerikaRoute.tube } },
+            ba: { trade: { items: () => batiAfrikaRoute.planes.map(p => p) }, energy: { group: batiAfrikaRoute.energyGroup },
+                  cities: { group: batiAfrikaRoute.labels }, meb: { mesh: batiAfrikaRoute.tube } },
+            oa: { trade: { items: () => ortaAsyaRoute.planes.map(p => p) }, energy: { group: ortaAsyaRoute.energyGroup },
+                  cities: { group: ortaAsyaRoute.labels }, meb: { mesh: ortaAsyaRoute.tube } },
+            pg: { trade: { items: () => pasifikGuneyRoute.planes.map(p => p) }, energy: { group: pasifikGuneyRoute.energyGroup },
+                  cities: { group: pasifikGuneyRoute.labels }, meb: { mesh: pasifikGuneyRoute.tube } }
+        };
+
+        // Layer combobox toggle
+        document.getElementById('layerComboBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const list = document.getElementById('layerComboList');
+            list.style.display = list.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('featComboList').style.display = 'none';
+        });
+        // Feature combobox toggle
+        document.getElementById('featComboBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const list = document.getElementById('featComboList');
+            list.style.display = list.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('layerComboList').style.display = 'none';
+        });
+        // Close combos when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#layerComboBtn') && !e.target.closest('#layerComboList')) {
+                document.getElementById('layerComboList').style.display = 'none';
+            }
+            if (!e.target.closest('#featComboBtn') && !e.target.closest('#featComboList')) {
+                document.getElementById('featComboList').style.display = 'none';
+            }
+        });
+        // City panel toggle
+        document.getElementById('cityPanelBtn').addEventListener('click', () => {
+            const pl = document.getElementById('cityPanelList');
+            pl.style.display = pl.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Select all / Deselect all layer buttons
+        function setAllLayers(checked) {
+            document.querySelectorAll('.layerChk').forEach(chk => {
+                if (chk.checked !== checked) {
+                    chk.checked = checked;
+                    chk.dispatchEvent(new Event('change'));
+                }
+            });
+            document.getElementById('layerComboBtn').textContent = checked ? 'Tümü ▾' : '0/8 ▾';
+        }
+        document.getElementById('layerSelectAll').addEventListener('click', () => setAllLayers(true));
+        document.getElementById('layerDeselectAll').addEventListener('click', () => setAllLayers(false));
+
+        // Route map for layer checkboxes
+        const routeMap = {
+            bk: { toggle: (v) => {
+                corridor.visible = v;
+                pipelineGroup.visible = v && isEnergyActive;
+                planes.forEach(p => { if (p.mesh) p.mesh.visible = v && flightVisible; });
+                dispersalPlanes.forEach(dp => { dp.sprite.visible = v && flightVisible; });
+                breakawayPlanes.forEach(bp => { bp.sprite.visible = v && flightVisible; });
+                ships.forEach(s => { s.sprite.visible = v && flightVisible; });
+                landVehicles.forEach(lv => { lv.sprite.visible = v && flightVisible; });
+                labelsGroup.visible = v && isLabelsActive;
+            }},
+            at: { route: atlantikRoute },
+            ak: { route: akdenizRoute },
+            pa: { route: pasifikRoute },
+            am: { route: amerikaRoute },
+            ba: { route: batiAfrikaRoute },
+            oa: { route: ortaAsyaRoute },
+            pg: { route: pasifikGuneyRoute }
+        };
+
+        // Layer checkboxes
+        document.querySelectorAll('.layerChk').forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const layer = chk.dataset.layer;
+                const v = e.target.checked;
+                const rm = routeMap[layer];
+                if (rm.toggle) rm.toggle(v);
+                else if (rm.route) rm.route.group.visible = v;
+                // Update combo button text
+                const allChks = document.querySelectorAll('.layerChk');
+                const checkedCount = [...allChks].filter(c => c.checked).length;
+                document.getElementById('layerComboBtn').textContent = checkedCount === allChks.length ? 'Tümü ▾' : checkedCount + '/' + allChks.length + ' ▾';
+            });
+        });
+
+        // Feature checkboxes - toggle feature across ALL checked layers
+        document.querySelectorAll('.featChk').forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const feat = chk.dataset.feat;
+                const v = e.target.checked;
+                // Apply to all layers
+                Object.keys(layerMap).forEach(layerKey => {
+                    const ref = layerMap[layerKey]?.[feat];
+                    if (!ref) return;
+                    if (ref.group) ref.group.visible = v;
+                    if (ref.mesh) ref.mesh.visible = v;
+                    if (ref.items) ref.items().forEach(item => {
+                        const t = item.mesh || item.sprite;
+                        if (t) t.visible = v;
+                    });
+                });
+                // Update Beyaz Kusak flags
+                if (feat === 'trade') { isFlightActive = v; flightVisible = v; }
+                if (feat === 'energy') { isEnergyActive = v; }
+                if (feat === 'cities') { isLabelsActive = v; }
+                if (feat === 'satellites') { isSatellitesActive = v; satelliteGroup.visible = v; }
+                // Update combo button
+                const icons = [];
+                document.querySelectorAll('.featChk').forEach(fc => {
+                    if (fc.checked) {
+                        if (fc.dataset.feat === 'trade') icons.push('🚚');
+                        if (fc.dataset.feat === 'energy') icons.push('⚡');
+                        if (fc.dataset.feat === 'cities') icons.push('🏙');
+                        if (fc.dataset.feat === 'meb') icons.push('📐');
+                        if (fc.dataset.feat === 'satellites') icons.push('🛰');
+                    }
+                });
+                document.getElementById('featComboBtn').textContent = (icons.join('') || '—') + ' ▾';
+            });
+        });
+
+        // Per-layer sub-feature toggle buttons
+        document.querySelectorAll('.lsub').forEach(btn => {
+            let active = true;
+            btn.addEventListener('click', () => {
+                active = !active;
+                btn.style.opacity = active ? '1' : '0.3';
+                const layer = btn.dataset.layer;
+                const feat = btn.dataset.feat;
+                const ref = layerMap[layer]?.[feat];
+                if (!ref) return;
+                if (ref.group) ref.group.visible = active;
+                if (ref.mesh) ref.mesh.visible = active;
+                if (ref.items) ref.items().forEach(it => {
+                    const target = it.mesh || it.sprite;
+                    if (target) target.visible = active;
+                });
+            });
+        });
+
+        camera.position.z = 15;
+        let isDragging = false, lastMouseX = 0, lastMouseY = 0;
+        renderer.domElement.addEventListener('mousedown', e => { isDragging = true; lastMouseX = e.clientX; lastMouseY = e.clientY; });
+        window.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            earthGroup.rotation.y += (e.clientX - lastMouseX) * 0.005;
+            earthGroup.rotation.x += (e.clientY - lastMouseY) * 0.005;
+            earthGroup.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, earthGroup.rotation.x));
+            lastMouseX = e.clientX; lastMouseY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('wheel', (e) => {
+            camera.position.z = Math.min(Math.max(camera.position.z + e.deltaY * 0.01, 7), 35);
+        }, { passive: true });
+
+        var cityNavTarget = null;
+        var tourZoomZ = 11; // default: Orta
+        function animate() {
+            requestAnimationFrame(animate);
+            // Cinematic mode: set camera/rotation before anything else
+            if (cinemaActive) updateCinematic();
+            // City nav button: smooth rotate to target city
+            if (cityNavTarget) {
+                earthGroup.rotation.y += (cityNavTarget.rotY - earthGroup.rotation.y) * 0.08;
+                earthGroup.rotation.x += (cityNavTarget.rotX - earthGroup.rotation.x) * 0.08;
+                camera.position.z += (10 - camera.position.z) * 0.04;
+                cityNavTarget.framesLeft--;
+                if (cityNavTarget.framesLeft <= 0) cityNavTarget = null;
+            }
+            // Toggle plane visibility for OFF state + corridor scale
+            if (typeof planes !== 'undefined') planes.forEach(p => {
+                const vis = flightVisible && (p.scaledVisible !== false);
+                if (p.mesh) p.mesh.visible = vis;
+            });
+            if (typeof dispersalPlanes !== 'undefined') dispersalPlanes.forEach(dp => {
+                dp.sprite.visible = flightVisible && (dp.scaledVisible !== false);
+            });
+            if (typeof breakawayPlanes !== 'undefined') breakawayPlanes.forEach(bp => {
+                bp.sprite.visible = flightVisible && (bp.scaledVisible !== false);
+            });
+            // Ship visibility
+            if (typeof ships !== 'undefined') ships.forEach(s => {
+                s.sprite.visible = flightVisible && (s.scaledVisible !== false);
+            });
+            // Land vehicle visibility
+            if (typeof landVehicles !== 'undefined') landVehicles.forEach(v => {
+                v.sprite.visible = flightVisible && (v.scaledVisible !== false);
+            });
+            if (isFlightActive) {
+                camera.updateMatrixWorld();
+                const _pos = new THREE.Vector3();
+                const _ahead = new THREE.Vector3();
+                // Sun direction for night/day detection
+                const sunDir = sun.position.clone().normalize();
+                const blinkTime = Date.now() * 0.006;
+                function updateNightDay(obj, idx) {
+                    const target = obj.mesh || obj.sprite;
+                    _pos.copy(target.position);
+                    earthGroup.localToWorld(_pos);
+                    // Back-face cull: hide if on back side of globe
+                    const pNorm = _pos.clone().normalize();
+                    const camP = new THREE.Vector3();
+                    camera.getWorldPosition(camP);
+                    const toC = camP.sub(_pos).normalize();
+                    if (pNorm.dot(toC) < -0.1) {
+                        target.visible = false;
+                        return;
+                    }
+                    target.visible = flightVisible;
+                    const dot = pNorm.dot(sunDir);
+                    const isNight = dot < 0.1;
+                    if (isNight && obj.nightMat) {
+                        target.material = obj.nightMat;
+                        const blink = Math.sin(blinkTime + idx * 1.7) > 0 ? 1 : 0.3;
+                        obj.nightMat.opacity = blink;
+                        obj.nightMat.rotation = obj.dayMat.rotation;
+                    } else if (obj.dayMat) {
+                        target.material = obj.dayMat;
+                    }
+                }
+                planes.forEach((p, i) => {
+                    p.offset = (p.offset + p.speed * p.direction * corridorScale + 1) % 1;
+                    const posOnCurve = curve.getPointAt(p.offset);
+                    const tangent = curve.getTangentAt(p.offset).normalize();
+                    const up = posOnCurve.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tangent, up).normalize();
+                    if (p.isDrifter) {
+                        p.lateralOffset += p.driftSpeed;
+                        const absDrift = Math.abs(p.lateralOffset);
+                        p.mat.opacity = Math.max(0, 1 - (absDrift / p.maxDrift));
+                        if (absDrift > p.maxDrift) { p.lateralOffset = (Math.random() - 0.5) * 0.1; p.offset = Math.random(); p.mat.opacity = 1; }
+                    }
+                    p.mesh.position.copy(posOnCurve.clone().add(right.clone().multiplyScalar(p.lateralOffset)));
+                    // Rotate sprite to face travel direction
+                    const dir3D = tangent.clone().multiplyScalar(p.direction);
+                    _pos.copy(p.mesh.position);
+                    earthGroup.localToWorld(_pos);
+                    _ahead.copy(p.mesh.position).add(dir3D.multiplyScalar(0.3));
+                    earthGroup.localToWorld(_ahead);
+                    const s1 = _pos.clone().project(camera);
+                    const s2 = _ahead.clone().project(camera);
+                    p.dayMat.rotation = -Math.atan2(s2.x - s1.x, s2.y - s1.y);
+                    updateNightDay(p, i);
+                });
+                // Dispersal planes: fly outward from cities, fade out
+                dispersalPlanes.forEach((dp, i) => {
+                    dp.progress += dp.speed * corridorScale;
+                    if (dp.progress > 1) {
+                        dp.progress = 0;
+                        dp.angle = Math.random() * Math.PI * 2;
+                        dp.mat.opacity = 1;
+                    }
+                    const dist = dp.progress * dp.maxRange;
+                    const latOff = Math.cos(dp.angle) * dist * 8;
+                    const lonOff = Math.sin(dp.angle) * dist * 8;
+                    const pos = latLonToVector3(dp.cityLat + latOff, dp.cityLon + lonOff, flightRadius);
+                    dp.sprite.position.copy(pos);
+                    dp.mat.opacity = Math.max(0, 1 - dp.progress * 1.2);
+                    // Rotate dispersal plane to face outward direction
+                    _pos.copy(dp.sprite.position);
+                    earthGroup.localToWorld(_pos);
+                    const nextDist = (dp.progress + 0.05) * dp.maxRange;
+                    const nPos = latLonToVector3(dp.cityLat + Math.cos(dp.angle)*nextDist*8, dp.cityLon + Math.sin(dp.angle)*nextDist*8, flightRadius);
+                    _ahead.copy(nPos);
+                    earthGroup.localToWorld(_ahead);
+                    const ds1 = _pos.clone().project(camera);
+                    const ds2 = _ahead.clone().project(camera);
+                    dp.dayMat.rotation = -Math.atan2(ds2.x - ds1.x, ds2.y - ds1.y);
+                    updateNightDay(dp, i + 200);
+                });
+                // Breakaway planes: peel off corridor diagonally
+                breakawayPlanes.forEach((bp, i) => {
+                    bp.progress += bp.speed * corridorScale;
+                    if (bp.progress > 1) {
+                        bp.progress = 0;
+                        bp.curveT = Math.random();
+                        bp.departAngle = (Math.random() > 0.5 ? 1 : -1) * (0.15 + Math.random() * 0.35) * Math.PI;
+                        bp.mat.opacity = 1;
+                    }
+                    const posOnCurve = curve.getPointAt(bp.curveT);
+                    const tangent = curve.getTangentAt(bp.curveT).normalize();
+                    const up = posOnCurve.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tangent, up).normalize();
+                    // Departure direction: mix of up and right based on angle
+                    const departDir = up.clone().multiplyScalar(Math.sin(bp.departAngle))
+                        .add(right.clone().multiplyScalar(Math.cos(bp.departAngle)));
+                    const dist = bp.progress * bp.maxDist;
+                    const pos = posOnCurve.clone().add(departDir.multiplyScalar(dist));
+                    bp.sprite.position.copy(pos);
+                    bp.mat.opacity = Math.max(0, 1 - bp.progress * 1.3);
+                    // Rotation
+                    _pos.copy(bp.sprite.position);
+                    earthGroup.localToWorld(_pos);
+                    const nextDist = (bp.progress + 0.05) * bp.maxDist;
+                    const nPos = posOnCurve.clone().add(
+                        up.clone().multiplyScalar(Math.sin(bp.departAngle) * nextDist)
+                        .add(right.clone().multiplyScalar(Math.cos(bp.departAngle) * nextDist))
+                    );
+                    _ahead.copy(nPos);
+                    earthGroup.localToWorld(_ahead);
+                    const bs1 = _pos.clone().project(camera);
+                    const bs2 = _ahead.clone().project(camera);
+                    bp.dayMat.rotation = -Math.atan2(bs2.x - bs1.x, bs2.y - bs1.y);
+                    updateNightDay(bp, i + 300);
+                });
+            }
+            // Maritime ship animation (ocean corridor)
+            if (isFlightActive && typeof ships !== 'undefined') {
+                const _spos = new THREE.Vector3();
+                const _sahead = new THREE.Vector3();
+                ships.forEach(s => {
+                    s.offset += s.speed * s.direction * corridorScale;
+                    if (s.offset > 1) s.offset -= 1;
+                    if (s.offset < 0) s.offset += 1;
+                    // Check if ship is over land — if so, respawn at ocean
+                    const checkPos = curve.getPointAt(s.offset);
+                    const theta = Math.atan2(checkPos.z, -checkPos.x);
+                    const lon = ((theta * 180 / Math.PI - 180) % 360 + 540) % 360 - 180;
+                    if (isOverLand(lon)) {
+                        s.offset = findOceanT();
+                        s.direction = Math.random() > 0.5 ? 1 : -1;
+                    }
+                    const pos = curve.getPointAt(s.offset);
+                    const tang = curve.getTangentAt(s.offset).normalize();
+                    const normal = pos.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                    const shipPos = pos.clone().add(right.multiplyScalar(s.lateralOffset));
+                    shipPos.normalize().multiplyScalar(shipRadius);
+                    s.sprite.position.copy(shipPos);
+                    // Rotate ship to face direction
+                    _spos.copy(s.sprite.position);
+                    earthGroup.localToWorld(_spos);
+                    const aheadPos = curve.getPointAt((s.offset + 0.01 * s.direction + 1) % 1);
+                    aheadPos.normalize().multiplyScalar(shipRadius);
+                    _sahead.copy(aheadPos);
+                    earthGroup.localToWorld(_sahead);
+                    const s1 = _spos.clone().project(camera);
+                    const s2 = _sahead.clone().project(camera);
+                    s.mat.rotation = -Math.atan2(s2.x - s1.x, s2.y - s1.y);
+                    // Back-face cull ship
+                    const sWP = _spos.clone();
+                    const sN = sWP.normalize();
+                    const sCam = new THREE.Vector3();
+                    camera.getWorldPosition(sCam);
+                    s.sprite.visible = sCam.sub(s.sprite.position.clone().applyMatrix4(earthGroup.matrixWorld)).normalize().dot(sN) > -0.1;
+                });
+            }
+            // Land vehicle animation (trains + trucks, Eurasia only)
+            if (isFlightActive && typeof landVehicles !== 'undefined') {
+                const _vpos = new THREE.Vector3();
+                const _vahead = new THREE.Vector3();
+                const waveTime = Date.now() * 0.001;
+                landVehicles.forEach(v => {
+                    v.offset += v.speed * v.direction * corridorScale;
+                    if (v.offset > 1) v.offset -= 1;
+                    if (v.offset < 0) v.offset += 1;
+                    // Check if vehicle left Eurasia land — respawn
+                    const checkPos = curve.getPointAt(v.offset);
+                    const vll = posToLatLon(checkPos);
+                    if (!isEurasiaLandLL(vll.lat, vll.lon)) {
+                        v.offset = findEurasiaLandT();
+                        v.direction = Math.random() > 0.5 ? 1 : -1;
+                    }
+                    const pos = curve.getPointAt(v.offset);
+                    const tang = curve.getTangentAt(v.offset).normalize();
+                    const normal = pos.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                    // Wavy lateral movement
+                    const wave = v.lateralOffset + Math.sin(waveTime + v.wavePhase) * 0.015;
+                    const vPos = pos.clone().add(right.multiplyScalar(wave));
+                    vPos.normalize().multiplyScalar(landVehicleRadius);
+                    v.sprite.position.copy(vPos);
+                    // Rotate to face direction
+                    _vpos.copy(v.sprite.position);
+                    earthGroup.localToWorld(_vpos);
+                    const aheadPos = curve.getPointAt((v.offset + 0.01 * v.direction + 1) % 1);
+                    aheadPos.normalize().multiplyScalar(landVehicleRadius);
+                    _vahead.copy(aheadPos);
+                    earthGroup.localToWorld(_vahead);
+                    const v1 = _vpos.clone().project(camera);
+                    const v2 = _vahead.clone().project(camera);
+                    v.mat.rotation = -Math.atan2(v2.x - v1.x, v2.y - v1.y);
+                    // Back-face cull vehicle
+                    const vWP = _vpos.clone();
+                    const vN = vWP.normalize();
+                    const vCam = new THREE.Vector3();
+                    camera.getWorldPosition(vCam);
+                    v.sprite.visible = vCam.sub(v.sprite.position.clone().applyMatrix4(earthGroup.matrixWorld)).normalize().dot(vN) > -0.1;
+                });
+            }
+            // Snake Train animation (multi-wagon chain)
+            if (isFlightActive && typeof snakeTrains !== 'undefined') {
+                const _tpos = new THREE.Vector3();
+                const _tahead = new THREE.Vector3();
+                snakeTrains.forEach(train => {
+                    if (!train.scaledVisible) {
+                        train.wagons.forEach(w => w.sprite.visible = false);
+                        return;
+                    }
+                    train.baseOffset += train.speed * train.direction * corridorScale;
+                    if (train.baseOffset > 1) train.baseOffset -= 1;
+                    if (train.baseOffset < 0) train.baseOffset += 1;
+                    // Check if locomotive left Eurasia — respawn
+                    const locoPos = curve.getPointAt(train.baseOffset);
+                    const locoLL = posToLatLon(locoPos);
+                    if (!isEurasiaLandLL(locoLL.lat, locoLL.lon)) {
+                        train.baseOffset = findEurasiaLandT();
+                        train.direction = Math.random() > 0.5 ? 1 : -1;
+                    }
+                    // Position each wagon along the curve
+                    train.wagons.forEach((w, idx) => {
+                        const wT = ((train.baseOffset - idx * wagonSpacing * train.direction) % 1 + 1) % 1;
+                        const pos = curve.getPointAt(wT);
+                        const tang = curve.getTangentAt(wT).normalize();
+                        const normal = pos.clone().normalize();
+                        const right = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                        const wPos = pos.clone().add(right.multiplyScalar(train.lateralOffset));
+                        wPos.normalize().multiplyScalar(landVehicleRadius);
+                        w.sprite.position.copy(wPos);
+                        // Rotate to face direction
+                        _tpos.copy(w.sprite.position);
+                        earthGroup.localToWorld(_tpos);
+                        const aT = ((wT + 0.005 * train.direction) % 1 + 1) % 1;
+                        const aPos = curve.getPointAt(aT);
+                        aPos.normalize().multiplyScalar(landVehicleRadius);
+                        _tahead.copy(aPos);
+                        earthGroup.localToWorld(_tahead);
+                        const p1 = _tpos.clone().project(camera);
+                        const p2 = _tahead.clone().project(camera);
+                        w.mat.rotation = -Math.atan2(p2.x - p1.x, p2.y - p1.y);
+                        // Back-face cull
+                        const wWP = _tpos.clone().normalize();
+                        const wCam = new THREE.Vector3();
+                        camera.getWorldPosition(wCam);
+                        w.sprite.visible = wCam.sub(w.sprite.position.clone().applyMatrix4(earthGroup.matrixWorld)).normalize().dot(wWP) > -0.1;
+                    });
+                });
+            }
+            // DNA helix energy flow animation (scales with corridor width)
+            if (isEnergyActive) {
+                const pulseTime = Date.now() * 0.003;
+                const wavePos = (Date.now() * 0.0002) % 1; // traveling wave position
+                const _eCam = new THREE.Vector3();
+                camera.getWorldPosition(_eCam);
+                energyParticles.forEach((ep, i) => {
+                    ep.t += ep.speed * corridorScale;
+                    if (ep.t > 1) ep.t -= 1;
+                    if (ep.t < 0) ep.t += 1;
+                    ep.sprite.position.copy(ep.curve.getPointAt(ep.t));
+                    // Traveling wave: brighter near wave front
+                    const waveDist = Math.abs(ep.t - wavePos);
+                    const waveBoost = Math.max(0, 1 - waveDist * 5) * 0.6;
+                    ep.mat.opacity = ep.baseOpacity * corridorScale * (0.5 + 0.3 * Math.sin(pulseTime + i * 0.8) + waveBoost);
+                    ep.sprite.scale.setScalar(ep.originalSize * (0.7 + 0.3 * corridorScale + waveBoost * 0.5));
+                    // Back-face cull energy
+                    const _eWP = new THREE.Vector3();
+                    ep.sprite.getWorldPosition(_eWP);
+                    const _eN = _eWP.clone().normalize();
+                    ep.sprite.visible = _eCam.clone().sub(_eWP).normalize().dot(_eN) > -0.1;
+                });
+                // DNA cross-bridge rung animation
+                try {
+                if (typeof dnaBridges !== 'undefined' && typeof strand1Curve !== 'undefined') {
+                    dnaBridges.forEach((bridge) => {
+                        const bt = bridge.baseT;
+                        const s1 = strand1Curve.getPointAt(bt);
+                        const s2 = strand2Curve.getPointAt(bt);
+                        const waveDist = Math.abs(bt - wavePos);
+                        const pulseB = 0.3 + 0.7 * Math.max(0, 1 - waveDist * 4);
+                        bridge.dots.forEach(dot => {
+                            const pos = s1.clone().lerp(s2, dot.frac);
+                            dot.sprite.position.copy(pos);
+                            dot.mat.opacity = pulseB * corridorScale;
+                            dot.sprite.scale.setScalar(dot.size * (0.8 + pulseB * 0.4));
+                            const bwp = new THREE.Vector3();
+                            dot.sprite.getWorldPosition(bwp);
+                            dot.sprite.visible = _eCam.clone().sub(bwp).normalize().dot(bwp.clone().normalize()) > -0.1;
+                        });
+                    });
+                }
+                } catch(e) {}
+                // Centrifugal radial particle animation (land only)
+                centrifugalParticles.forEach((cp) => {
+                    cp.progress += cp.speed;
+                    if (cp.progress > 1) {
+                        // Respawn at new land helix position
+                        cp.progress = 0;
+                        cp.helixT = findLandHelixT(cp.strand);
+                        cp.spinDir = Math.random() > 0.5 ? 1 : -1;
+                        cp.maxDist = 0.4 + Math.random() * 0.8;
+                        cp.spinAmount = 0.3 + Math.random() * 0.6;
+                    }
+                    const origin = cp.strand.getPointAt(cp.helixT);
+                    const normal = origin.clone().normalize();
+                    const tang = cp.strand.getTangentAt(cp.helixT).normalize();
+                    const perp = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                    // Spiral outward: radial + spin (scales with corridor width)
+                    const dist = cp.progress * cp.maxDist * corridorScale;
+                    const spinAngle = cp.progress * cp.spinAmount * Math.PI * cp.spinDir;
+                    const outward = perp.clone().multiplyScalar(Math.cos(spinAngle) * dist)
+                        .add(tang.clone().multiplyScalar(Math.sin(spinAngle) * dist));
+                    const pos = origin.clone().add(outward);
+                    pos.normalize().multiplyScalar(globeRad);
+                    cp.sprite.position.copy(pos);
+                    // Fade out as it radiates
+                    const fade = 1 - cp.progress;
+                    cp.mat.opacity = fade * fade * 0.8 * corridorScale;
+                    cp.sprite.scale.setScalar(cp.size * (1 + cp.progress * 0.5));
+                    // Back-face cull centrifugal
+                    const _cWP = new THREE.Vector3();
+                    cp.sprite.getWorldPosition(_cWP);
+                    const _cN = _cWP.clone().normalize();
+                    const _cCam = new THREE.Vector3();
+                    camera.getWorldPosition(_cCam);
+                    cp.sprite.visible = _cCam.sub(_cWP).normalize().dot(_cN) > -0.1;
+                });
+            }
+            // === SATELLITE ORBIT ANIMATION ===
+            if (isSatellitesActive && satelliteGroup.visible) {
+                const visibleSatCount = Math.floor(satellites.length * corridorScale);
+                satellites.forEach((sat, idx) => {
+                    if (idx >= visibleSatCount) { sat.sprite.visible = false; return; }
+                    sat.sprite.visible = true;
+                    sat.offset += sat.speed * sat.direction * corridorScale;
+                    if (sat.offset > 1) sat.offset -= 1;
+                    if (sat.offset < 0) sat.offset += 1;
+                    const t = Math.max(0.001, Math.min(0.999, sat.offset));
+                    const pos = sat.curve.getPointAt(t);
+                    const tang = sat.curve.getTangentAt(t).normalize();
+                    const normal = pos.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                    // Wobble laterally
+                    const wobble = Math.sin(Date.now() * 0.001 + sat.wobblePhase) * sat.wobbleAmp;
+                    const satPos = pos.clone().add(right.multiplyScalar(wobble));
+                    // Push to satellite altitude (above globe surface)
+                    satPos.normalize().multiplyScalar(satAltitude);
+                    sat.sprite.position.copy(satPos);
+                    // Pulse glow
+                    sat.mat.opacity = 0.7 + 0.25 * Math.sin(Date.now() * 0.003 + sat.wobblePhase);
+                });
+            }
+            if (!cinemaActive) {
+                if (!isDragging && isRotationActive && !targetRotation) earthGroup.rotation.y += 0.0006 * rotationSpeed;
+                // Smooth navigation to target city
+                if (targetRotation) {
+                    earthGroup.rotation.y += (targetRotation.y - earthGroup.rotation.y) * 0.04;
+                    earthGroup.rotation.x += (targetRotation.x - earthGroup.rotation.x) * 0.04;
+                }
+            }
+            // Dynamic label scaling + back-face culling
+            if (isLabelsActive && labelsGroup.visible) {
+                const dist = camera.position.z;
+                const labelScale = Math.max(0.4, Math.min(2.4, (dist - 7) / (15 - 7) * 2.4));
+                const spriteScaleX = labelScale;
+                const spriteScaleY = labelScale * 0.25;
+                const camWorldPos = new THREE.Vector3();
+                camera.getWorldPosition(camWorldPos);
+                labelsGroup.children.forEach(sprite => {
+                    sprite.scale.set(spriteScaleX, spriteScaleY, 1);
+                    // Hide labels on back side of globe
+                    const worldPos = new THREE.Vector3();
+                    sprite.getWorldPosition(worldPos);
+                    const toCamera = camWorldPos.clone().sub(worldPos).normalize();
+                    const surfaceNormal = worldPos.clone().normalize();
+                    sprite.visible = toCamera.dot(surfaceNormal) > -0.1;
+                });
+            }
+            // City dot day/night animation
+            if (typeof cityDots !== 'undefined') {
+                const sunDir2 = sun.position.clone().normalize();
+                const camWP2 = new THREE.Vector3();
+                camera.getWorldPosition(camWP2);
+                cityDots.forEach(cd => {
+                    const wp = new THREE.Vector3();
+                    cd.sprite.getWorldPosition(wp);
+                    const sn = wp.clone().normalize();
+                    const toC = camWP2.clone().sub(wp).normalize();
+                    // Back-face cull
+                    if (toC.dot(sn) < -0.1) { cd.sprite.visible = false; return; }
+                    cd.sprite.visible = true;
+                    const dot = sn.dot(sunDir2);
+                    const isNight = dot < 0.1;
+                    if (isNight) {
+                        cd.mat.map = nightDotTex;
+                        cd.sprite.scale.set(0.09 * corridorScale, 0.09 * corridorScale, 1);
+                        cd.mat.opacity = 0.95;
+                    } else {
+                        cd.mat.map = dayDotTex;
+                        cd.sprite.scale.set(0.04 * corridorScale, 0.04 * corridorScale, 1);
+                        cd.mat.opacity = 0.7;
+                    }
+                    cd.mat.needsUpdate = true;
+                });
+            }
+            // Sub-corridor animations: planes + energy + label scaling
+            const scDist = camera.position.z;
+            const scLabelScale = Math.max(0.3, Math.min(1.8, (scDist - 7) / (15 - 7) * 1.8));
+            const scSunDir = sun.position.clone().normalize();
+            allSubCorridors.forEach(sc => {
+                if (!sc.group.visible) return;
+                const _camPos = new THREE.Vector3();
+                camera.getWorldPosition(_camPos);
+                // Animate planes along sub-corridor curve
+                sc.planes.forEach(p => {
+                    p.offset += p.speed * p.direction * corridorScale;
+                    if (p.offset > 1) p.offset -= 1;
+                    if (p.offset < 0) p.offset += 1;
+                    const t = Math.max(0, Math.min(1, p.offset));
+                    const pos = sc.curve.getPointAt(t);
+                    const tang = sc.curve.getTangentAt(t).normalize();
+                    const normal = pos.clone().normalize();
+                    const right = new THREE.Vector3().crossVectors(tang, normal).normalize();
+                    const planePos = pos.clone().add(right.multiplyScalar(p.lateralOffset));
+                    planePos.normalize().multiplyScalar(5.12);
+                    p.mesh.position.copy(planePos);
+                    // Rotate to face direction
+                    const _p1 = planePos.clone();
+                    earthGroup.localToWorld(_p1);
+                    const aheadT = Math.max(0, Math.min(1, t + 0.01 * p.direction));
+                    const _p2 = sc.curve.getPointAt(aheadT).normalize().multiplyScalar(5.12);
+                    earthGroup.localToWorld(_p2);
+                    const s1 = _p1.project(camera);
+                    const s2 = _p2.project(camera);
+                    p.dayMat.rotation = -Math.atan2(s2.x - s1.x, s2.y - s1.y);
+                    // Back-face cull plane
+                    const pWP = new THREE.Vector3();
+                    p.mesh.getWorldPosition(pWP);
+                    const pN = pWP.clone().normalize();
+                    const pToC = _camPos.clone().sub(pWP).normalize();
+                    p.mesh.visible = flightVisible && pToC.dot(pN) > -0.1;
+                    // Night/day material switching
+                    if (p.mesh.visible && p.dayMat && p.nightMat) {
+                        const dot = pN.dot(scSunDir);
+                        if (dot < 0.1) {
+                            p.mesh.material = p.nightMat;
+                            p.nightMat.rotation = p.dayMat.rotation;
+                        } else {
+                            p.mesh.material = p.dayMat;
+                        }
+                    }
+                });
+                // Animate energy particles along sub-corridor curve
+                if (sc.energyGroup.visible) {
+                    const pulse = Date.now() * 0.003;
+                    sc.energy.forEach((e, i) => {
+                        e.offset += e.speed * e.direction;
+                        if (e.offset > 1) e.offset -= 1;
+                        if (e.offset < 0) e.offset += 1;
+                        const t = Math.max(0, Math.min(1, e.offset));
+                        const pos = sc.curve.getPointAt(t);
+                        e.sprite.position.copy(pos);
+                        e.mat.opacity = 0.5 + 0.3 * Math.sin(pulse + i * 0.9);
+                        // Back-face cull energy
+                        const eWP = new THREE.Vector3();
+                        e.sprite.getWorldPosition(eWP);
+                        const eN = eWP.clone().normalize();
+                        const eToC = _camPos.clone().sub(eWP).normalize();
+                        e.sprite.visible = eToC.dot(eN) > -0.1;
+                    });
+                }
+                // Scale sub-corridor labels + back-face culling
+                if (sc.labels.visible) {
+                    sc.labels.children.forEach(sprite => {
+                        sprite.scale.set(scLabelScale, scLabelScale * 0.25, 1);
+                        const wp = new THREE.Vector3();
+                        sprite.getWorldPosition(wp);
+                        const toC = _camPos.clone().sub(wp).normalize();
+                        const sn = wp.clone().normalize();
+                        sprite.visible = toC.dot(sn) > -0.1;
+                    });
+                }
+            });
+            // Update sun position based on slider
+            const sunRad = sunAngle * Math.PI / 180;
+            sun.position.set(Math.cos(sunRad) * 12, 3, Math.sin(sunRad) * 12);
+            // Update time label
+            const label = document.getElementById('timeLabel');
+            const camDot = Math.cos(sunRad) * 0 + Math.sin(sunRad) * 1; // dot with camera dir (0,0,1)
+            if (camDot > 0.3) label.textContent = 'Gündüz';
+            else if (camDot < -0.3) label.textContent = 'Gece';
+            else label.textContent = 'Alacakaranlık';
+            // Auto corridor width sync with day/night
+            if (corridorAutoSync) {
+                // sin(sunRad): 1 at noon(90°), 0 at dawn/dusk(0°/180°), -1 at midnight(270°)
+                // Map to 0-1: midnight=0(min traffic), noon=1(max traffic)
+                const dayFactor = (Math.sin(sunRad) + 1) / 2;
+                const targetKm = Math.round((1000 + dayFactor * 2000) / 50) * 50; // 1000-3000
+                const cSlider = document.getElementById('corridorWidthSlider');
+                const currentKm = parseInt(cSlider.value);
+                if (Math.abs(currentKm - targetKm) > 40) {
+                    const newKm = currentKm + Math.sign(targetKm - currentKm) * 50;
+                    cSlider.value = newKm;
+                    cSlider.dispatchEvent(new Event('input'));
+                }
+            }
+            // TNB auto-sync with day/night (20-80 range)
+            if (typeof tnbAutoSync !== 'undefined' && tnbAutoSync) {
+                const dayFactor = (Math.sin(sunRad) + 1) / 2;
+                const targetTnb = Math.round(20 + dayFactor * 60); // 20-80
+                const tSlider = document.getElementById('tnbSlider');
+                const currentTnb = parseInt(tSlider.value);
+                if (Math.abs(currentTnb - targetTnb) > 3) {
+                    const newTnb = currentTnb + Math.sign(targetTnb - currentTnb) * 5;
+                    tSlider.value = Math.max(0, Math.min(100, newTnb));
+                    tSlider.dispatchEvent(new Event('input'));
+                }
+            }
+            // Cloud layer slow rotation
+            if (typeof cloudMesh !== 'undefined') cloudMesh.rotation.y += 0.0001;
+            // TNB inter-city flight animation
+            if (tnbVisibleCount > 0) {
+                const _tnbCam = new THREE.Vector3();
+                camera.getWorldPosition(_tnbCam);
+                const tnbSun = sun.position.clone().normalize();
+                for (let ti = 0; ti < tnbVisibleCount && ti < tnbPairs.length; ti++) {
+                    const tp = tnbPairs[ti];
+                    tp.offset += tp.speed * tp.direction;
+                    if (tp.offset > 1) { tp.offset = 0; tp.direction = 1; }
+                    if (tp.offset < 0) { tp.offset = 1; tp.direction = -1; }
+                    const t = Math.max(0.001, Math.min(0.999, tp.offset));
+                    const pos = tp.curve.getPointAt(t);
+                    tp.sprite.position.copy(pos);
+                    // Back-face cull using world position
+                    const wp = tp.sprite.position.clone().applyMatrix4(earthGroup.matrixWorld);
+                    const wn = wp.clone().normalize();
+                    const toC = _tnbCam.clone().sub(wp).normalize();
+                    if (toC.dot(wn) < -0.1) { tp.sprite.visible = false; continue; }
+                    tp.sprite.visible = true;
+                    // Rotate to face direction
+                    const aT = Math.max(0.001, Math.min(0.999, t + 0.02 * tp.direction));
+                    const _tp1 = pos.clone();
+                    earthGroup.localToWorld(_tp1);
+                    const _tp2 = tp.curve.getPointAt(aT);
+                    earthGroup.localToWorld(_tp2);
+                    const ts1 = _tp1.project(camera);
+                    const ts2 = _tp2.project(camera);
+                    tp.dayMat.rotation = -Math.atan2(ts2.x - ts1.x, ts2.y - ts1.y);
+                    // Night/day switch
+                    const ndot = wn.dot(tnbSun);
+                    if (ndot < 0.1) { tp.sprite.material = tp.nightMat; tp.nightMat.rotation = tp.dayMat.rotation; }
+                    else { tp.sprite.material = tp.dayMat; }
+                }
+            }
+            // Mini stats update
+            const sEl = document.getElementById('miniStats');
+            if (sEl) {
+                const pCount = (typeof planes !== 'undefined' ? planes.length : 0)
+                    + allSubCorridors.reduce((sum, sc) => sum + sc.planes.length, 0)
+                    + (typeof dispersalPlanes !== 'undefined' ? dispersalPlanes.length : 0)
+                    + (typeof breakawayPlanes !== 'undefined' ? breakawayPlanes.length : 0)
+                    + tnbVisibleCount;
+                const sCount = typeof ships !== 'undefined' ? ships.length : 0;
+                const tCount = typeof snakeTrains !== 'undefined' ? snakeTrains.length : 0;
+                const truckCount = typeof landVehicles !== 'undefined' ? landVehicles.length : 0;
+                sEl.innerHTML = `✈️ ${pCount} &nbsp;🚢 ${sCount} &nbsp;🚂 ${tCount} &nbsp;🚛 ${truckCount}`;
+            }
+            try { if (typeof checkYSCSHover === 'function') checkYSCSHover(); } catch(e) {}
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // === CINEMATIC MODE ===
+        var cinemaActive = false, cinemaStart = 0;
+        const cinemaDuration = 100; // seconds
+        const cinemaKeyframes = [
+            // rotY = -lon*PI/180 - PI/2, rotX = lat*PI/180
+            // Madrid(lon-3.7)=-1.51, Roma(lon12.5)=-1.79, Ankara(lon32.9)=-2.15, Baku(lon49.9)=-2.44, Buhara(lon64.4)=-2.69
+            {t:0,   rotY:-1.2, rotX:0.0,  camZ:18, sunA:45,  text:'Beyaz Barış Koridoru — Dünya\'nın Kesişen Yolları'},
+            {t:8,   rotY:-1.51, rotX:0.08, camZ:11, sunA:60,  text:'Madrid — İberya Yarımadası\'ndan yola çıkıyoruz'},
+            {t:20,  rotY:-1.65, rotX:0.08, camZ:9,  sunA:90,  text:'Akdeniz üzerinden doğuya çeviriyoruz rotamızı'},
+            {t:32,  rotY:-1.79, rotX:0.08, camZ:9,  sunA:120, text:'Roma — Avrupa\'nın kalbi, enerji hatlarının kavşağı'},
+            {t:42,  rotY:-1.95, rotX:0.10, camZ:8.5,sunA:150, text:'Ege Denizi ve Anadolu\'ya yaklaşıyoruz'},
+            {t:55,  rotY:-2.15, rotX:0.10, camZ:8,  sunA:175, text:'Ankara — Barış Koridoru\'nun stratejik merkezi'},
+            {t:65,  rotY:-2.44, rotX:0.08, camZ:9,  sunA:210, text:'Bakü — DNA enerji sarmalı koridor boyunca akıyor'},
+            {t:78,  rotY:-2.69, rotX:0.06, camZ:11, sunA:260, text:'Buhara — Orta Asya, İpek Yolu\'nun modern hali'},
+            {t:88,  rotY:-2.0,  rotX:0.03, camZ:14, sunA:310, text:'Enerji, ticaret ve barış bir arada akar'},
+            {t:98,  rotY:-1.6,  rotX:0.0,  camZ:15, sunA:45,  text:'Beyaz Barış Koridoru — Antigravity'}
+        ];
+
+        function lerpKeyframes(t) {
+            let a = cinemaKeyframes[0], b = cinemaKeyframes[1];
+            for (let i = 0; i < cinemaKeyframes.length - 1; i++) {
+                if (t >= cinemaKeyframes[i].t && t <= cinemaKeyframes[i+1].t) {
+                    a = cinemaKeyframes[i]; b = cinemaKeyframes[i+1]; break;
+                }
+            }
+            if (t >= cinemaKeyframes[cinemaKeyframes.length-1].t) {
+                a = b = cinemaKeyframes[cinemaKeyframes.length-1];
+            }
+            const frac = a.t === b.t ? 1 : (t - a.t) / (b.t - a.t);
+            const ease = frac * frac * (3 - 2 * frac); // smoothstep
+            return {
+                rotY: a.rotY + (b.rotY - a.rotY) * ease,
+                rotX: a.rotX + (b.rotX - a.rotX) * ease,
+                camZ: a.camZ + (b.camZ - a.camZ) * ease,
+                sunA: a.sunA + (b.sunA - a.sunA) * ease,
+                text: frac < 0.5 ? a.text : b.text
+            };
+        }
+
+        const cinemaBtnEl = document.getElementById('cinemaBtn');
+        if (cinemaBtnEl) cinemaBtnEl.addEventListener('click', () => {
+            if (cinemaActive) {
+                cinemaActive = false;
+                document.getElementById('cinemaOverlay').style.display = 'none';
+                cinemaBtnEl.style.background = 'rgba(100,50,200,0.7)';
+                return;
+            }
+            cinemaActive = true;
+            cinemaStart = Date.now();
+            document.getElementById('cinemaOverlay').style.display = 'block';
+            cinemaBtnEl.style.background = 'rgba(200,50,50,0.9)';
+            isRotationActive = false;
+            targetRotation = null;
+        });
+
+        function updateCinematic() {
+            if (!cinemaActive) return;
+            const elapsed = (Date.now() - cinemaStart) / 1000;
+            if (elapsed > cinemaDuration) {
+                cinemaActive = false;
+                document.getElementById('cinemaOverlay').style.display = 'none';
+                document.getElementById('cinemaBtn').style.background = 'rgba(100,50,200,0.7)';
+                return;
+            }
+            const kf = lerpKeyframes(elapsed);
+            earthGroup.rotation.y = kf.rotY;
+            earthGroup.rotation.x = kf.rotX;
+            camera.position.z = kf.camZ;
+            sunAngle = kf.sunA;
+            sunSlider.value = sunAngle;
+            // Update subtitle
+            const textEl = document.getElementById('cinemaText');
+            if (textEl.textContent !== kf.text) {
+                textEl.style.opacity = 0;
+                setTimeout(() => { textEl.textContent = kf.text; textEl.style.opacity = 1; }, 500);
+            }
+            document.getElementById('cinemaTimer').textContent = Math.floor(elapsed) + 's / ' + cinemaDuration + 's';
+        }
+
+        // === ROUTE TOUR SYSTEM (city-by-city) ===
+        let tourActive = false, tourQueue = [];
+        let tourCities = [], tourCityIdx = 0, tourLerpT = 0;
+        let tourRouteName = '';
+        const tourRouteData = {
+            bk: {
+                name: 'Beyaz Kuşak — Ana Yatay Hat',
+                cities: [
+                    {name:'Tokyo', lat:35.68, lon:139.65}, {name:'Seul', lat:37.57, lon:126.98},
+                    {name:'Gansu', lat:36.06, lon:103.83}, {name:'Aksu', lat:41.17, lon:80.26},
+                    {name:'Buhara', lat:39.77, lon:64.43}, {name:'Bakü', lat:40.41, lon:49.87},
+                    {name:'Ankara', lat:39.93, lon:32.86}, {name:'Roma', lat:41.90, lon:12.50},
+                    {name:'Madrid', lat:40.42, lon:-3.70}, {name:'Turks ve Caicos', lat:21.75, lon:-71.75},
+                    {name:'Meksika', lat:19.43, lon:-99.13}, {name:'Honolulu', lat:21.31, lon:-157.86}
+                ]
+            },
+            at: {
+                name: 'Atlantik Hattı — Dikey',
+                cities: [
+                    {name:'Vaşington', lat:38.9, lon:-77.0}, {name:'Karakas', lat:10.5, lon:-66.9},
+                    {name:'Belem', lat:-1.5, lon:-48.5}, {name:'Rio de Janeiro', lat:-22.9, lon:-43.2}
+                ]
+            },
+            ak: {
+                name: 'Akdeniz-Afrika Hattı — Dikey',
+                cities: [
+                    {name:'Budapeşte', lat:47.5, lon:19.0}, {name:'Ankara', lat:39.9, lon:32.9},
+                    {name:'Kahire', lat:30.0, lon:31.2}, {name:'Hartum', lat:15.6, lon:32.5},
+                    {name:'Mogadişu', lat:2.0, lon:45.3}, {name:'Dar es Salaam', lat:-6.8, lon:39.3},
+                    {name:'Antananarivo', lat:-18.9, lon:47.5}, {name:'Cape Town', lat:-33.9, lon:18.4}
+                ]
+            },
+            pa: {
+                name: 'Pasifik-Asya Hattı — Dikey',
+                cities: [
+                    {name:'Ulanbatur', lat:47.9, lon:106.9}, {name:'Gansu', lat:36.1, lon:103.8},
+                    {name:'Hanoi', lat:21.0, lon:105.8}, {name:'Tay Nim', lat:11.3, lon:106.1},
+                    {name:'Cakarta', lat:-6.2, lon:106.8}
+                ]
+            },
+            am: {
+                name: 'Amerika Hattı — Dikey',
+                cities: [
+                    {name:'San Francisco', lat:37.8, lon:-122.4}, {name:'Meksika', lat:19.4, lon:-99.1},
+                    {name:'Panama', lat:9.0, lon:-79.5}, {name:'Lima', lat:-12.0, lon:-77.0},
+                    {name:'Santiago', lat:-33.4, lon:-70.7}
+                ]
+            },
+            ba: {
+                name: 'Batı Afrika Hattı — Dikey',
+                cities: [
+                    {name:'Londra', lat:51.5, lon:-0.1}, {name:'Madrid', lat:40.4, lon:-3.7},
+                    {name:'Marakeş', lat:31.6, lon:-8.0}, {name:'Dakar', lat:14.7, lon:-17.5},
+                    {name:'Lagos', lat:6.5, lon:3.4},
+                    {name:'Luanda', lat:-8.8, lon:13.2}
+                ]
+            },
+            oa: {
+                name: 'Orta Asya Hattı — Dikey',
+                cities: [
+                    {name:'Astana', lat:51.1, lon:71.4}, {name:'Buhara', lat:39.8, lon:64.4},
+                    {name:'Karaçi', lat:24.9, lon:67.0}, {name:'Kolombo', lat:6.9, lon:79.9}
+                ]
+            },
+            pg: {
+                name: 'Pasifik-Güney Hattı — Dikey',
+                cities: [
+                    {name:'Tokyo', lat:35.7, lon:139.7}, {name:'Tayvan', lat:25.0, lon:121.5},
+                    {name:'Cebu', lat:10.3, lon:123.9}, {name:'Nabire', lat:-3.4, lon:135.5},
+                    {name:'Sydney', lat:-33.9, lon:151.2}, {name:'Tauranga', lat:-37.7, lon:176.1}
+                ]
+            }
+        };
+        // Peace quotes: city name → { latin, native }
+        const peaceQuotes = {
+            'Madrid': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Roma': { latin: 'Pace in Patria, Pace nel Mondo', native: '' },
+            'Ankara': { latin: 'Yurtta Sulh, Cihanda Sulh', native: '' },
+            'Bakü': { latin: 'Yurdda Sülh, Cahanda Sülh', native: '' },
+            'Buhara': { latin: 'Yurtda Tinchlik, Jahonda Tinchlik', native: '' },
+            'Aksu': { latin: 'Yurtta Tinchliq, Jahanda Tinchliq', native: 'يۇرتتا تىنچلىق، جاھاندا تىنچلىق' },
+            'Gansu': { latin: 'Guónèi Hépíng, Shìjiè Hépíng', native: '国内和平，世界和平' },
+            'Seul': { latin: 'Gungnae Pyeonghwa, Segye Pyeonghwa', native: '국내 평화, 세계 평화' },
+            'Tokyo': { latin: 'Jikoku ni Heiwa o, Sekai ni Heiwa o', native: '自国に平和を、世界に平和を' },
+            'Honolulu': { latin: 'Maluhia ma ka Hale, Maluhia ma ka Honua', native: '' },
+            'Meksika': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Turks ve Caicos': { latin: 'Peace at Home, Peace in the World', native: '' },
+            'San Francisco': { latin: 'Peace at Home, Peace in the World', native: '' },
+            'Vaşington': { latin: 'Peace at Home, Peace in the World', native: '' },
+            'Karakas': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Lima': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Santiago': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Budapeşte': { latin: 'Béke a Hazában, Béke a Világban', native: '' },
+            'Kahire': { latin: 'As-Salaam fil-Watan, As-Salaam fil-Aalam', native: 'السلام في الوطن، السلام في العالم' },
+            'Dakar': { latin: 'Jamm ci Réew mi, Jamm ci Àdduna bi', native: '' },
+            'Lagos': { latin: 'Àlàáfíà Nílé, Àlàáfíà Lágbàáyé', native: '' },
+            'Astana': { latin: 'Yurtda Tınıştıq, Älemde Tınıştıq', native: 'Жұртта тыныштық, Әлемде тыныштық' },
+            'Karaçi': { latin: 'Watan Mein Aman, Jahan Mein Aman', native: 'وطن میں امن، جہان میں امن' },
+            'Hanoi': { latin: 'Hòa Bình Tại Quê Hương, Hòa Bình Trên Thế Giới', native: '' },
+            'Londra': { latin: 'Peace at Home, Peace in the World', native: '' },
+            'Marakeş': { latin: 'As-Salaam fil-Watan, As-Salaam fil-Aalam', native: 'السلام في الوطن، السلام في العالم' },
+            'Belem': { latin: 'Paz na Pátria, Paz no Mundo', native: '' },
+            'Rio de Janeiro': { latin: 'Paz na Pátria, Paz no Mundo', native: '' },
+            'Hartum': { latin: 'As-Salaam fil-Watan, As-Salaam fil-Aalam', native: 'السلام في الوطن، السلام في العالم' },
+            'Mogadişu': { latin: 'Nabad Wadanka, Nabad Adduunka', native: '' },
+            'Dar es Salaam': { latin: 'Amani Nyumbani, Amani Duniani', native: '' },
+            'Antananarivo': { latin: 'Fiadanana ao An-tanindrazana, Fiadanana eran-tany', native: '' },
+            'Cape Town': { latin: 'Vrede in die Vaderland, Vrede in die Wêreld', native: '' },
+            'Ulanbatur': { latin: 'Ekh Orond Enkh Taivan, Delkhiid Enkh Taivan', native: 'Эх Оронд Энх Тайван, Дэлхийд Энх Тайван' },
+            'Tay Nim': { latin: 'Hòa Bình Tại Quê Hương, Hòa Bình Trên Thế Giới', native: '' },
+            'Cakarta': { latin: 'Damai di Negeri, Damai di Dunia', native: '' },
+            'Panama': { latin: 'Paz en la Patria, Paz en el Mundo', native: '' },
+            'Luanda': { latin: 'Paz na Pátria, Paz no Mundo', native: '' },
+            'Kolombo': { latin: 'Maathubimayi Samayi, Lokaye Samayi', native: 'මව්බිමේ සාමය, ලෝකයේ සාමය' },
+            'Tayvan': { latin: 'Guónèi Hépíng, Shìjiè Hépíng', native: '國內和平，世界和平' },
+            'Cebu': { latin: 'Kalinaw sa Yutang Natawhan, Kalinaw sa Kalibotan', native: '' },
+            'Nabire': { latin: 'Damai di Negeri, Damai di Dunia', native: '' },
+            'Sydney': { latin: 'Peace at Home, Peace in the World', native: '' },
+            'Tauranga': { latin: 'Te Rangimārie ki te Kāinga, Te Rangimārie ki te Ao', native: '' },
+        };
+        let lastPeaceCity = '';
+        function showPeaceQuote(cityName) {
+            const q = peaceQuotes[cityName];
+            const el = document.getElementById('peaceQuote');
+            if (!q || !el) { if (el) el.style.opacity = 0; return; }
+            if (cityName === lastPeaceCity) return;
+            lastPeaceCity = cityName;
+            el.style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('peaceQuoteLatin').textContent = q.latin;
+                document.getElementById('peaceQuoteNative').textContent = q.native;
+                el.style.opacity = 1;
+            }, 500);
+        }
+        function latLonToRotation(lat, lon) {
+            const rotY = -lon * Math.PI / 180 - Math.PI / 2;
+            const rotX = lat * Math.PI / 180;
+            return { rotY, rotX };
+        }
+        function startRouteTour(routeKey) {
+            const rd = tourRouteData[routeKey];
+            if (!rd) return;
+            tourCities = rd.cities;
+            tourRouteName = rd.name;
+            tourCityIdx = 0;
+            tourLerpT = 0;
+            tourActive = true;
+            isRotationActive = false;
+            targetRotation = null;
+            document.getElementById('cinemaOverlay').style.display = 'block';
+            const tEl = document.getElementById('cinemaText');
+            tEl.textContent = tourRouteName + ' — ' + tourCities[0].name;
+            tEl.style.opacity = 1;
+            document.querySelectorAll('.tourBtn').forEach(b => {
+                b.style.outline = b.dataset.route === routeKey ? '2px solid #fff' : 'none';
+            });
+            // Snap globe to first city immediately
+            const startRot = latLonToRotation(tourCities[0].lat, tourCities[0].lon);
+            earthGroup.rotation.y = startRot.rotY;
+            earthGroup.rotation.x = startRot.rotX;
+            camera.position.z = tourZoomZ;
+        }
+        function updateRouteTour() {
+            if (!tourActive || tourCities.length === 0) return;
+            const pauseAt = 0.12;
+            const totalSegments = tourCities.length - 1;
+            if (totalSegments <= 0) { tourActive = false; return; }
+            // BK has 12 cities: slower. Others: medium
+            let transSpeed = tourCities.length > 8 ? 0.002 : 0.003;
+            if (tourLerpT > 1.0) transSpeed *= 0.5; // return trip: half speed
+            if (tosActive) transSpeed = 0.0003125; // TOS: slow fixed speed
+            tourLerpT += transSpeed;
+            // Round-trip: 0→1 = forward, 1→2 = reverse, 2→2.3 = zoom-out finale
+            if (tourLerpT >= 2.3) {
+                tourActive = false;
+                document.getElementById('cinemaText').style.opacity = 0;
+                document.querySelectorAll('.tourBtn').forEach(b => b.style.outline = 'none');
+                if (tourQueue.length > 0) {
+                    setTimeout(() => startRouteTour(tourQueue.shift()), 800);
+                } else {
+                    cinemaActive = false;
+                    document.getElementById('cinemaOverlay').style.display = 'none';
+                }
+                return;
+            }
+            // Zoom-out finale phase
+            if (tourLerpT >= 2.0) {
+                camera.position.z += (25 - camera.position.z) * 0.04;
+                const tEl = document.getElementById('cinemaText');
+                const finaleText = tourRouteName + ' — Genel Bakış';
+                if (tEl.textContent !== finaleText) {
+                    tEl.style.opacity = 0;
+                    setTimeout(() => { tEl.textContent = finaleText; tEl.style.opacity = 1; }, 300);
+                }
+                document.getElementById('cinemaTimer').textContent = '🌍';
+                return;
+            }
+            // Map 0-2 to forward(0-1) then reverse(1-0)
+            let effectiveT;
+            let isReturn = false;
+            if (tourLerpT <= 1.0) {
+                effectiveT = tourLerpT;
+            } else {
+                effectiveT = 2.0 - tourLerpT;
+                isReturn = true;
+            }
+            const rawSeg = effectiveT * totalSegments;
+            const segIdx = Math.min(Math.floor(rawSeg), totalSegments - 1);
+            let localT = rawSeg - segIdx;
+            if (localT < pauseAt) localT = 0;
+            else if (localT > 1 - pauseAt) localT = 1;
+            else localT = (localT - pauseAt) / (1 - 2 * pauseAt);
+            localT = localT * localT * (3 - 2 * localT);
+            const cityA = tourCities[segIdx];
+            const cityB = tourCities[segIdx + 1];
+            const lat = cityA.lat + (cityB.lat - cityA.lat) * localT;
+            const lon = cityA.lon + (cityB.lon - cityA.lon) * localT;
+            const rot = latLonToRotation(lat, lon);
+            earthGroup.rotation.y += (rot.rotY - earthGroup.rotation.y) * 0.06;
+            earthGroup.rotation.x += (rot.rotX - earthGroup.rotation.x) * 0.06;
+            // Auto zoom: far on forward, closer on return
+            const activeZoom = isReturn ? tourZoomZ * 0.65 : tourZoomZ;
+            camera.position.z += (activeZoom - camera.position.z) * 0.03;
+            const showCity = localT < 0.5 ? cityA : cityB;
+            const dirLabel = isReturn ? ' ◀ Dönüş' : ' ▶ Gidiş';
+            const tEl = document.getElementById('cinemaText');
+            const newText = showCity.name + ' — ' + tourRouteName + dirLabel;
+            if (tEl.textContent !== newText) {
+                tEl.style.opacity = 0;
+                setTimeout(() => { tEl.textContent = newText; tEl.style.opacity = 1; }, 300);
+                showPeaceQuote(showCity.name);
+            }
+            document.getElementById('cinemaTimer').textContent =
+                Math.floor(tourLerpT / 2 * 100) + '%';
+        }
+        // Patch cinematic update to handle tours
+        const _origUpdate = updateCinematic;
+        updateCinematic = function() {
+            if (tourActive) { updateRouteTour(); return; }
+            if (tourQueue.length > 0) return; // waiting for next tour, don't run old cinematic
+            _origUpdate();
+        };
+        document.querySelectorAll('.tourBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const route = btn.dataset.route;
+                if (tourActive) {
+                    tourActive = false; tourQueue = [];
+                    cinemaActive = false;
+                    document.getElementById('cinemaOverlay').style.display = 'none';
+                    document.querySelectorAll('.tourBtn').forEach(b => b.style.outline = 'none');
+                    return;
+                }
+                if (route === 'all') {
+                    tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'pg'];
+                    cinemaActive = true;
+                    startRouteTour('bk');
+                } else {
+                    cinemaActive = true;
+                    startRouteTour(route);
+                }
+            });
+        });
+
+        // TOS (Tam Otomatik Sinema) — activates everything at once
+        let tosActive = false;
+        document.getElementById('tosBtn').addEventListener('click', () => {
+            if (tosActive) {
+                // Stop TOS — restore UI
+                tosActive = false;
+                document.getElementById('tosBtn').style.background = 'rgba(255,200,0,0.5)';
+                document.getElementById('legendBox').style.display = '';
+                document.getElementById('cityPanel').style.display = '';
+                document.getElementById('corridorSliderBox').style.display = '';
+                document.getElementById('miniStats').style.display = '';
+                document.querySelector('.bottom-bar').style.display = '';
+                return;
+            }
+            tosActive = true;
+            document.getElementById('tosBtn').style.background = 'rgba(255,50,50,0.8)';
+
+            // 1. Start full cinematic tour (all routes)
+            if (!tourActive) {
+                tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'pg'];
+                cinemaActive = true;
+                startRouteTour('bk');
+            }
+
+            // 2. Enable sun auto-play (click if not already playing)
+            const sunBtn = document.getElementById('sunPlayBtn');
+            if (sunBtn.textContent.includes('▶')) sunBtn.click();
+
+            // 3. Enable corridor auto-sync
+            if (!corridorAutoSync) document.getElementById('corridorAutoBtn').click();
+
+            // 4. Enable TNB auto-sync
+            if (!tnbAutoSync) document.getElementById('tnbAutoBtn').click();
+
+            // 5. Start music
+            if (!musicPlaying) document.getElementById('musicBtn').click();
+
+            // 6. Hide all UI for clean cinematic view
+            toggleMenu(true);
+            document.getElementById('legendBox').style.display = 'none';
+            document.getElementById('cityPanel').style.display = 'none';
+            document.getElementById('corridorSliderBox').style.display = 'none';
+            document.getElementById('miniStats').style.display = 'none';
+            document.querySelector('.bottom-bar').style.display = 'none';
+        });
+
+        // YSCS (Yurtta Sulh Cihanda Sulh) hover mode
+        let yscsActive = false;
+        let yscsMouse = { x: 0, y: 0 };
+        document.addEventListener('mousemove', (e) => { yscsMouse.x = e.clientX; yscsMouse.y = e.clientY; });
+        document.getElementById('yscsBtn').addEventListener('click', () => {
+            yscsActive = !yscsActive;
+            const btn = document.getElementById('yscsBtn');
+            btn.style.background = yscsActive ? 'rgba(100,200,255,0.8)' : 'rgba(100,200,255,0.4)';
+            if (!yscsActive) document.getElementById('yscsTooltip').style.display = 'none';
+        });
+        // YSCS hover check runs inside animate loop — add to end of animate
+        function checkYSCSHover() {
+            if (!yscsActive) return;
+            const tooltip = document.getElementById('yscsTooltip');
+            // Build all cities from all tour routes + main corridor
+            const allCitiesMap = {};
+            cities.forEach(c => { allCitiesMap[c.name] = c; });
+            Object.values(tourRouteData).forEach(rd => {
+                rd.cities.forEach(c => { if (!allCitiesMap[c.name]) allCitiesMap[c.name] = c; });
+            });
+            const allCities = Object.values(allCitiesMap);
+            let closest = null, minDist = 50;
+            allCities.forEach(c => {
+                const pos3 = latLonToVector3(c.lat, c.lon, 5.0);
+                const worldPos = pos3.clone();
+                earthGroup.localToWorld(worldPos);
+                // Back-face cull: skip cities on the back of globe
+                const camPos = new THREE.Vector3();
+                camera.getWorldPosition(camPos);
+                const toCamera = camPos.clone().sub(worldPos).normalize();
+                const surfaceNormal = worldPos.clone().normalize();
+                if (toCamera.dot(surfaceNormal) < 0.1) return;
+                // Project to screen
+                const projected = worldPos.clone().project(camera);
+                const sx = (projected.x * 0.5 + 0.5) * window.innerWidth;
+                const sy = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+                if (projected.z > 1) return;
+                const dist = Math.sqrt((sx - yscsMouse.x) ** 2 + (sy - yscsMouse.y) ** 2);
+                if (dist < minDist) { minDist = dist; closest = c; }
+            });
+            if (closest && peaceQuotes[closest.name]) {
+                const q = peaceQuotes[closest.name];
+                document.getElementById('yscsCity').textContent = closest.name;
+                document.getElementById('yscsLatin').textContent = q.latin;
+                document.getElementById('yscsNative').textContent = q.native || '';
+                tooltip.style.display = 'block';
+                tooltip.style.left = (yscsMouse.x + 15) + 'px';
+                tooltip.style.top = (yscsMouse.y - 60) + 'px';
+            } else {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        // City navigation buttons
+        document.querySelectorAll('.cityNav').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lat = parseFloat(btn.dataset.lat);
+                const lon = parseFloat(btn.dataset.lon);
+                const rot = latLonToRotation(lat, lon);
+                cityNavTarget = { rotY: rot.rotY, rotX: rot.rotX, framesLeft: 60 };
+                // Highlight active
+                document.querySelectorAll('.cityNav').forEach(b => b.style.background = 'rgba(255,255,255,0.12)');
+                btn.style.background = 'rgba(0,255,255,0.3)';
+            });
+        });
+
+        // Zoom level buttons for cinematic tours
+        document.querySelectorAll('.zoomBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                tourZoomZ = parseFloat(btn.dataset.zoom);
+                // Also apply immediately if not in a tour
+                if (!tourActive) {
+                    camera.position.z = tourZoomZ;
+                }
+                document.querySelectorAll('.zoomBtn').forEach(b => {
+                    b.style.border = 'none';
+                    b.style.background = 'rgba(0,200,255,0.3)';
+                });
+                btn.style.border = '1px solid rgba(0,200,255,0.6)';
+                btn.style.background = 'rgba(0,200,255,0.5)';
+            });
+        });
+
+    </script>
+</body>
+</html>
