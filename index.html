@@ -2893,6 +2893,9 @@
             currentTrackIndex = 3;
             loadTrack(currentTrackIndex);
 
+            // 0. Set zoom to Uzak (Far)
+            document.querySelector('.zoomBtn[data-zoom="16"]').click();
+
             // 1. Start full cinematic tour (all routes)
             if (!tourActive) {
                 tourQueue = ['at', 'ak', 'pa', 'am', 'ba', 'oa', 'pg'];
