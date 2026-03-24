@@ -372,8 +372,14 @@
             <span id="sunSpeedLabel" style="font-size:9px;color:#ffaa00;font-weight:bold;min-width:22px;">1x</span>
         </div>
         <button id="screenshotBtn" title="Ekran Görüntüsü" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px;">📸</button>
-        <button id="musicBtn" title="Müzik Aç/Kapat" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🎵</button>
-        <audio id="ambientAudio" loop preload="none" src="music/12 Dil v4.wav"></audio>
+        <!-- Music Playlist Panel -->
+        <div style="display:flex;align-items:center;gap:6px;margin-left:6px;padding-left:6px;border-left:1px solid rgba(255,255,255,0.2);">
+            <button id="musicPrevBtn" title="Önceki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">◀</button>
+            <button id="musicPlayBtn" title="Oynat/Duraklat" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶️</button>
+            <button id="musicNextBtn" title="Sonraki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶</button>
+            <span id="nowPlayingLabel" style="font-size:8px;color:rgba(100,150,255,0.9);font-weight:bold;min-width:90px;">Now: 12 Dil v4</span>
+        </div>
+        <audio id="ambientAudio" preload="none"></audio>
         <span id="timeLabel" class="text-[10px] text-gray-400" style="min-width:60px;text-align:right;">Gündüz</span>
     </div>
 
@@ -483,23 +489,72 @@
             link.click();
         });
 
-        // Music toggle handler
+        // Music Playlist System
+        const playlist = [
+            'music/12 Dil v1.wav',
+            'music/12 Dil v2.wav',
+            'music/12 Dil v3.wav',
+            'music/12 Dil v4.wav',
+            'music/12 Dil v5.wav'
+        ];
+        const playlistNames = ['12 Dil v1', '12 Dil v2', '12 Dil v3', '12 Dil v4', '12 Dil v5'];
+        
+        let currentTrackIndex = 3; // Start with 12 Dil v4
         let musicPlaying = false;
         const ambientAudio = document.getElementById('ambientAudio');
         ambientAudio.volume = 0.3;
-        document.getElementById('musicBtn').addEventListener('click', () => {
-            musicPlaying = !musicPlaying;
-            const btn = document.getElementById('musicBtn');
+        
+        function loadTrack(index) {
+            currentTrackIndex = index % playlist.length;
+            ambientAudio.src = playlist[currentTrackIndex];
+            document.getElementById('nowPlayingLabel').textContent = 'Now: ' + playlistNames[currentTrackIndex];
             if (musicPlaying) {
-                ambientAudio.play();
-                btn.style.background = 'rgba(100,200,255,0.4)';
-                btn.textContent = '🔊';
+                ambientAudio.play().catch(() => {});
+            }
+        }
+        
+        function updatePlayButtonUI() {
+            const btn = document.getElementById('musicPlayBtn');
+            if (musicPlaying) {
+                btn.textContent = '⏸️';
+                btn.style.background = 'rgba(100,200,255,0.6)';
+            } else {
+                btn.textContent = '▶️';
+                btn.style.background = 'rgba(100,150,255,0.3)';
+            }
+        }
+        
+        // Play/Pause
+        document.getElementById('musicPlayBtn').addEventListener('click', () => {
+            musicPlaying = !musicPlaying;
+            if (musicPlaying) {
+                ambientAudio.play().catch(() => {});
             } else {
                 ambientAudio.pause();
-                btn.style.background = 'rgba(255,255,255,0.12)';
-                btn.textContent = '🎵';
+            }
+            updatePlayButtonUI();
+        });
+        
+        // Previous Track
+        document.getElementById('musicPrevBtn').addEventListener('click', () => {
+            loadTrack(currentTrackIndex - 1);
+        });
+        
+        // Next Track
+        document.getElementById('musicNextBtn').addEventListener('click', () => {
+            loadTrack(currentTrackIndex + 1);
+        });
+        
+        // Auto-advance to next track when current ends
+        ambientAudio.addEventListener('ended', () => {
+            if (musicPlaying) {
+                loadTrack(currentTrackIndex + 1);
+                ambientAudio.play().catch(() => {});
             }
         });
+        
+        // Initialize with first track
+        loadTrack(currentTrackIndex);
 
         // Traffic density color for corridor
         function updateCorridorColor() {
@@ -2827,10 +2882,16 @@
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
                 document.querySelector('.bottom-bar').style.display = '';
+                // Stop music when TOS ends
+                if (musicPlaying) document.getElementById('musicPlayBtn').click();
                 return;
             }
             tosActive = true;
             document.getElementById('tosBtn').style.background = 'rgba(255,50,50,0.8)';
+
+            // Reset playlist to start (12 Dil v4)
+            currentTrackIndex = 3;
+            loadTrack(currentTrackIndex);
 
             // 1. Start full cinematic tour (all routes)
             if (!tourActive) {
@@ -2850,7 +2911,7 @@
             if (!tnbAutoSync) document.getElementById('tnbAutoBtn').click();
 
             // 5. Start music
-            if (!musicPlaying) document.getElementById('musicBtn').click();
+            if (!musicPlaying) document.getElementById('musicPlayBtn').click();
 
             // 6. Hide all UI for clean cinematic view
             toggleMenu(true);
