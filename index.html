@@ -645,7 +645,8 @@
         function loadTrack(index) {
             currentTrackIndex = ((index % playlist.length) + playlist.length) % playlist.length;
             ambientAudio.src = playlist[currentTrackIndex];
-            document.getElementById('nowPlayingLabel').textContent = 'Now: ' + playlistNames[currentTrackIndex];
+            const label = document.getElementById('nowPlayingLabel');
+            if (label) label.textContent = 'Now: ' + (playlistNames[currentTrackIndex] || ('Track ' + (currentTrackIndex + 1)));
             if (musicPlaying) {
                 ambientAudio.play().catch(() => {});
             }
@@ -712,35 +713,34 @@
 
         var tnbPairs = [], tnbVisibleCount = 0, tnbGroup = null;
 
+        let musicPanelIsFloating = false;
+
         function toggleMenu(hide) {
             const overlay = document.getElementById('mainOverlay');
             const openBtn = document.getElementById('openMenuBtn');
             const legend = document.getElementById('legendBox');
-            const floatingPanel = document.getElementById('floatingMusicPanel');
             overlay.classList.toggle('hidden-menu', hide);
             openBtn.style.display = hide ? 'block' : 'none';
             legend.style.opacity = hide ? '0.4' : '1';
             if (!hide) {
-                // Move music panel back to bottom bar
-                musicPanelSlot.appendChild(musicPlaylistPanel);
-                document.getElementById('musicMinimizeBtn') && musicPanelSlot.appendChild(document.getElementById('musicMinimizeBtn'));
-                floatingPanel.classList.remove('visible');
                 document.getElementById('legendBox').style.display = '';
                 document.getElementById('cityPanel').style.display = '';
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
                 document.querySelector('.bottom-bar').style.display = '';
                 document.querySelector('.bottom-bar').classList.remove('tos-music-only');
+                if (musicPanelIsFloating) {
+                    const floatingPanel = document.getElementById('floatingMusicPanel');
+                    musicPanelSlot.appendChild(musicPlaylistPanel);
+                    const minimizeBtn = document.getElementById('musicMinimizeBtn');
+                    if (minimizeBtn) musicPanelSlot.appendChild(minimizeBtn);
+                    floatingPanel.classList.remove('visible');
+                    musicPanelIsFloating = false;
+                }
                 if (typeof tosActive !== 'undefined' && tosActive) {
                     tosActive = false;
                     document.getElementById('tosBtn').style.background = 'rgba(255,200,0,0.5)';
                 }
-            } else {
-                // Move music panel to floating panel under menu button
-                floatingPanel.appendChild(musicPlaylistPanel);
-                const minimizeBtn = document.getElementById('musicMinimizeBtn');
-                if (minimizeBtn) floatingPanel.appendChild(minimizeBtn);
-                floatingPanel.classList.add('visible');
             }
         }
 
@@ -752,6 +752,14 @@
             document.getElementById('miniStats').style.display = 'none';
             const leftPanel = document.getElementById('leftPanel');
             if (leftPanel) leftPanel.style.display = 'none';
+            if (!musicPanelIsFloating) {
+                const floatingPanel = document.getElementById('floatingMusicPanel');
+                floatingPanel.appendChild(musicPlaylistPanel);
+                const minimizeBtn = document.getElementById('musicMinimizeBtn');
+                if (minimizeBtn) floatingPanel.appendChild(minimizeBtn);
+                floatingPanel.classList.add('visible');
+                musicPanelIsFloating = true;
+            }
         }
 
         const cities = [
