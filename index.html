@@ -383,7 +383,7 @@
             <button class="tourBtn" data-route="pa" title="Pasifik-Asya Turu" style="font-size:9px;background:rgba(51,153,255,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵PA</button>
             <button class="tourBtn" data-route="am" title="Amerika Turu" style="font-size:9px;background:rgba(221,68,170,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟣AM</button>
             <button class="tourBtn" data-route="ba" title="Batı Afrika Turu" style="font-size:9px;background:rgba(204,170,34,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟡BA</button>
-            <button class="tourBtn" data-route="oa" title="Orta Asya Turu" style="font-size:9px;background:rgba(0,204,204,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵OA</button>
+            <button class="tourBtn" data-route="oa" title="Kafkasya-Kızıl Deniz Turu" style="font-size:9px;background:rgba(0,204,204,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🔵OA</button>
             <button class="tourBtn" data-route="kg" title="Kuzey-Güney Barış Turu" style="font-size:9px;background:rgba(184,77,255,0.45);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟣KG</button>
             <button class="tourBtn" data-route="pg" title="Pasifik-Güney Turu" style="font-size:9px;background:rgba(119,255,51,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟢PG</button>
             <button class="tourBtn" data-route="all" title="Tüm Hatlar Turu" style="font-size:9px;background:rgba(200,50,200,0.5);border:none;color:#fff;border-radius:4px;padding:2px 5px;cursor:pointer;font-weight:bold;">🎬 Tümü</button>
@@ -401,6 +401,7 @@
                 <button class="cityNav" data-lat="36.06" data-lon="103.83" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Gansu</button>
                 <button class="cityNav" data-lat="41.17" data-lon="80.26" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Aksu</button>
                 <button class="cityNav" data-lat="55.76" data-lon="37.62" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Moskova</button>
+                <button class="cityNav" data-lat="51.1" data-lon="71.4" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Astana</button>
                 <button class="cityNav" data-lat="39.77" data-lon="64.43" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Buhara</button>
                 <button class="cityNav" data-lat="31.55" data-lon="74.34" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Lahor</button>
                 <button class="cityNav" data-lat="23.83" data-lon="91.28" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Tripura</button>
@@ -778,6 +779,7 @@
             { name: "Seul", lat: 37.5665, lon: 126.9780 },
             { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
             { name: "Moskova", lat: 55.76, lon: 37.62 },
+            { name: "Astana", lat: 51.1, lon: 71.4 },
             { name: "Lahor", lat: 31.55, lon: 74.34 },
             { name: "Tripura", lat: 23.83, lon: 91.28 },
             { name: "Honolulu", lat: 21.3069, lon: -157.8583 },
@@ -1801,18 +1803,17 @@
         ];
         const batiAfrikaRoute = createCorridorRoute(batiAfrikaCities, 0xccaa22, 0.15);
 
-        // Orta Asya Hattı: Astana → Buhara(kesişim) → Karaçi
+        // Kafkasya-Kızıl Deniz Dikey Hattı: Moskova → Bakü(kesişim) → Karaçi
         const ortaAsyaCities = [
-            { name: "Astana", lat: 51.1, lon: 71.4 },
-            { name: "", lat: 39.8, lon: 64.4 },
-            { name: "Karaçi", lat: 24.9, lon: 67.0 },
-            { name: "Kolombo", lat: 6.9, lon: 79.9 }
+            { name: "Moskova", lat: 55.76, lon: 37.62 },
+            { name: "", lat: 40.41, lon: 49.87 },
+            { name: "Karaçi", lat: 24.9, lon: 67.0 }
         ];
         const ortaAsyaRoute = createCorridorRoute(ortaAsyaCities, 0x00cccc, 0.15);
 
-        // Kuzey-Güney Barış Hattı: Moskova → Buhara(kesişim) → Lahor → Tripura
+        // Kuzey-Güney Barış Hattı: Astana → Buhara(kesişim) → Lahor → Tripura
         const kuzeyGuneyCities = [
-            { name: "Moskova", lat: 55.76, lon: 37.62 },
+            { name: "Astana", lat: 51.1, lon: 71.4 },
             { name: "", lat: 39.77, lon: 64.43 },
             { name: "Lahor", lat: 31.55, lon: 74.34 },
             { name: "Tripura", lat: 23.83, lon: 91.28 }
@@ -2853,16 +2854,16 @@
                 ]
             },
             oa: {
-                name: 'Orta Asya Hattı — Dikey',
+                name: 'Kafkasya-Kızıl Deniz Dikey Hattı',
                 cities: [
-                    {name:'Astana', lat:51.1, lon:71.4}, {name:'Buhara', lat:39.8, lon:64.4},
-                    {name:'Karaçi', lat:24.9, lon:67.0}, {name:'Kolombo', lat:6.9, lon:79.9}
+                    {name:'Moskova', lat:55.76, lon:37.62}, {name:'Bakü', lat:40.41, lon:49.87},
+                    {name:'Karaçi', lat:24.9, lon:67.0}
                 ]
             },
             kg: {
                 name: 'Kuzey-Güney Barış Hattı — Dikey',
                 cities: [
-                    {name:'Moskova', lat:55.76, lon:37.62}, {name:'Buhara', lat:39.77, lon:64.43},
+                    {name:'Astana', lat:51.1, lon:71.4}, {name:'Buhara', lat:39.77, lon:64.43},
                     {name:'Lahor', lat:31.55, lon:74.34}, {name:'Tripura', lat:23.83, lon:91.28}
                 ]
             },
