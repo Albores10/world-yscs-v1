@@ -388,12 +388,14 @@
             <span id="sunSpeedLabel" style="font-size:9px;color:#ffaa00;font-weight:bold;min-width:22px;">1x</span>
         </div>
         <button id="screenshotBtn" title="Ekran Görüntüsü" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px;">📸</button>
+        <div id="musicPanelSlot" style="display:flex;align-items:center;">
         <!-- Music Playlist Panel -->
         <div id="musicPlaylistPanel" style="display:flex;align-items:center;gap:6px;margin-left:6px;padding-left:6px;border-left:1px solid rgba(255,255,255,0.2);">
             <button id="musicPrevBtn" title="Önceki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">◀</button>
             <button id="musicPlayBtn" title="Oynat/Duraklat" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶️</button>
             <button id="musicNextBtn" title="Sonraki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶</button>
             <span id="nowPlayingLabel" style="font-size:8px;color:rgba(100,150,255,0.9);font-weight:bold;min-width:90px;">Now: 12 Dil v4</span>
+        </div>
         </div>
         <audio id="ambientAudio" preload="none"></audio>
         <span id="timeLabel" class="text-[10px] text-gray-400" style="min-width:60px;text-align:right;">Gündüz</span>
@@ -518,7 +520,19 @@
         let currentTrackIndex = 3; // Start with 12 Dil v4
         let musicPlaying = false;
         const ambientAudio = document.getElementById('ambientAudio');
+        const musicPlaylistPanel = document.getElementById('musicPlaylistPanel');
+        const musicPanelSlot = document.getElementById('musicPanelSlot');
         ambientAudio.volume = 0.3;
+
+        function setMusicPanelFloating(isFloating) {
+            if (isFloating) {
+                document.body.appendChild(musicPlaylistPanel);
+                musicPlaylistPanel.classList.add('floating');
+                return;
+            }
+            musicPanelSlot.appendChild(musicPlaylistPanel);
+            musicPlaylistPanel.classList.remove('floating');
+        }
         
         function loadTrack(index) {
             currentTrackIndex = index % playlist.length;
@@ -2898,8 +2912,8 @@
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
                 document.querySelector('.bottom-bar').style.display = '';
-                // Remove floating style from music panel
-                document.getElementById('musicPlaylistPanel').classList.remove('floating');
+                // Restore music panel to the bottom bar
+                setMusicPanelFloating(false);
                 // Stop music when TOS ends
                 if (musicPlaying) document.getElementById('musicPlayBtn').click();
                 return;
@@ -2941,8 +2955,8 @@
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
             document.querySelector('.bottom-bar').style.display = 'none';
-            // Make music playlist floating during TOS
-            document.getElementById('musicPlaylistPanel').classList.add('floating');
+            // Keep music playlist visible during TOS
+            setMusicPanelFloating(true);
         });
 
         // YSCS (Yurtta Sulh Cihanda Sulh) hover mode
