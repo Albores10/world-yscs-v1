@@ -643,7 +643,7 @@
         }
         
         function loadTrack(index) {
-            currentTrackIndex = index % playlist.length;
+            currentTrackIndex = ((index % playlist.length) + playlist.length) % playlist.length;
             ambientAudio.src = playlist[currentTrackIndex];
             document.getElementById('nowPlayingLabel').textContent = 'Now: ' + playlistNames[currentTrackIndex];
             if (musicPlaying) {
