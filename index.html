@@ -568,7 +568,7 @@
         ];
         const playlistNames = ['12 Dil v1', '12 Dil v2', '12 Dil v3', '12 Dil v4', '12 Dil v5'];
         
-        let currentTrackIndex = 3; // Start with 12 Dil v4
+        let currentTrackIndex = 0; // Start with 12 Dil v1
         let musicPlaying = false;
         const ambientAudio = document.getElementById('ambientAudio');
         const musicPlaylistPanel = document.getElementById('musicPlaylistPanel');
@@ -655,6 +655,7 @@
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
                 document.querySelector('.bottom-bar').style.display = '';
+                document.querySelector('.bottom-bar').classList.remove('tos-music-only');
                 if (typeof tosActive !== 'undefined' && tosActive) {
                     tosActive = false;
                     document.getElementById('tosBtn').style.background = 'rgba(255,200,0,0.5)';
@@ -668,9 +669,9 @@
             document.getElementById('cityPanel').style.display = 'none';
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
-            // Hide all bottom bar children EXCEPT music panel
+            // Show music panel in TOS-style floating mode (like TOS mode)
             const bottomBar = document.querySelector('.bottom-bar');
-            bottomBar.style.display = 'flex';
+            bottomBar.classList.add('tos-music-only');
             for (let child of bottomBar.children) {
                 if (child.id !== 'musicPanelSlot') {
                     child.style.display = 'none';
@@ -2976,8 +2977,8 @@
             tosActive = true;
             document.getElementById('tosBtn').style.background = 'rgba(255,50,50,0.8)';
 
-            // Reset playlist to start (12 Dil v4)
-            currentTrackIndex = 3;
+            // Reset playlist to start (12 Dil v1)
+            currentTrackIndex = 0;
             loadTrack(currentTrackIndex);
 
             // 0. Set zoom to Uzak (Far)
