@@ -197,6 +197,34 @@
             pointer-events: auto;
         }
 
+        #floatingMusicPanel {
+            position: fixed;
+            top: 48px;
+            right: 10px;
+            z-index: 320;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            pointer-events: auto;
+        }
+
+        #floatingMusicPanel.visible {
+            display: flex;
+        }
+
+        #floatingMusicPanel #musicPlaylistPanel {
+            background: rgba(0,0,0,0.82) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100,150,255,0.4) !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            gap: 6px !important;
+            margin: 0 !important;
+            border-left: none !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
         .toggle-btn-ui {
             position: absolute;
             top: 10px;
@@ -281,6 +309,9 @@
     <button id="openMenuBtn" class="toggle-btn-ui" onclick="toggleMenu(false)">
         ☰ Menüyü Göster
     </button>
+
+    <!-- Floating music panel (shown when menu is hidden) -->
+    <div id="floatingMusicPanel"></div>
 
     <div id="mainOverlay" class="ui-overlay">
         <div class="card">
@@ -685,11 +716,15 @@
             const overlay = document.getElementById('mainOverlay');
             const openBtn = document.getElementById('openMenuBtn');
             const legend = document.getElementById('legendBox');
+            const floatingPanel = document.getElementById('floatingMusicPanel');
             overlay.classList.toggle('hidden-menu', hide);
             openBtn.style.display = hide ? 'block' : 'none';
             legend.style.opacity = hide ? '0.4' : '1';
-            // Restore all panels when showing menu (TOS recovery)
             if (!hide) {
+                // Move music panel back to bottom bar
+                musicPanelSlot.appendChild(musicPlaylistPanel);
+                document.getElementById('musicMinimizeBtn') && musicPanelSlot.appendChild(document.getElementById('musicMinimizeBtn'));
+                floatingPanel.classList.remove('visible');
                 document.getElementById('legendBox').style.display = '';
                 document.getElementById('cityPanel').style.display = '';
                 document.getElementById('corridorSliderBox').style.display = '';
@@ -700,6 +735,12 @@
                     tosActive = false;
                     document.getElementById('tosBtn').style.background = 'rgba(255,200,0,0.5)';
                 }
+            } else {
+                // Move music panel to floating panel under menu button
+                floatingPanel.appendChild(musicPlaylistPanel);
+                const minimizeBtn = document.getElementById('musicMinimizeBtn');
+                if (minimizeBtn) floatingPanel.appendChild(minimizeBtn);
+                floatingPanel.classList.add('visible');
             }
         }
 
@@ -709,14 +750,6 @@
             document.getElementById('cityPanel').style.display = 'none';
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
-            // Show music panel in TOS-style floating mode (like TOS mode)
-            const bottomBar = document.querySelector('.bottom-bar');
-            bottomBar.classList.add('tos-music-only');
-            for (let child of bottomBar.children) {
-                if (child.id !== 'musicPanelSlot') {
-                    child.style.display = 'none';
-                }
-            }
             const leftPanel = document.getElementById('leftPanel');
             if (leftPanel) leftPanel.style.display = 'none';
         }
