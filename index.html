@@ -102,6 +102,22 @@
             box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
         }
 
+        /* Floating music panel for TOS mode */
+        #musicPlaylistPanel.floating {
+            position: fixed !important;
+            bottom: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 300 !important;
+            margin: 0 !important;
+            gap: 8px !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(10px);
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(100, 150, 255, 0.4) !important;
+        }
+
         .toggle-btn-ui {
             position: absolute;
             top: 10px;
@@ -373,7 +389,7 @@
         </div>
         <button id="screenshotBtn" title="Ekran Görüntüsü" style="font-size:14px;background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px;">📸</button>
         <!-- Music Playlist Panel -->
-        <div style="display:flex;align-items:center;gap:6px;margin-left:6px;padding-left:6px;border-left:1px solid rgba(255,255,255,0.2);">
+        <div id="musicPlaylistPanel" style="display:flex;align-items:center;gap:6px;margin-left:6px;padding-left:6px;border-left:1px solid rgba(255,255,255,0.2);">
             <button id="musicPrevBtn" title="Önceki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">◀</button>
             <button id="musicPlayBtn" title="Oynat/Duraklat" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶️</button>
             <button id="musicNextBtn" title="Sonraki Şarkı" style="font-size:12px;background:rgba(100,150,255,0.3);border:none;color:#fff;border-radius:4px;padding:4px 6px;cursor:pointer;">▶</button>
@@ -2882,6 +2898,8 @@
                 document.getElementById('corridorSliderBox').style.display = '';
                 document.getElementById('miniStats').style.display = '';
                 document.querySelector('.bottom-bar').style.display = '';
+                // Remove floating style from music panel
+                document.getElementById('musicPlaylistPanel').classList.remove('floating');
                 // Stop music when TOS ends
                 if (musicPlaying) document.getElementById('musicPlayBtn').click();
                 return;
@@ -2923,6 +2941,8 @@
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
             document.querySelector('.bottom-bar').style.display = 'none';
+            // Make music playlist floating during TOS
+            document.getElementById('musicPlaylistPanel').classList.add('floating');
         });
 
         // YSCS (Yurtta Sulh Cihanda Sulh) hover mode
