@@ -668,7 +668,14 @@
             document.getElementById('cityPanel').style.display = 'none';
             document.getElementById('corridorSliderBox').style.display = 'none';
             document.getElementById('miniStats').style.display = 'none';
-            document.querySelector('.bottom-bar').style.display = 'none';
+            // Hide all bottom bar children EXCEPT music panel
+            const bottomBar = document.querySelector('.bottom-bar');
+            bottomBar.style.display = 'flex';
+            for (let child of bottomBar.children) {
+                if (child.id !== 'musicPanelSlot') {
+                    child.style.display = 'none';
+                }
+            }
             const leftPanel = document.getElementById('leftPanel');
             if (leftPanel) leftPanel.style.display = 'none';
         }
