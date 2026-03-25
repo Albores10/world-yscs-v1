@@ -883,10 +883,10 @@
         
         // Auto-advance to next track when current ends
         ambientAudio.addEventListener('ended', () => {
-            if (musicPlaying) {
-                loadTrack(currentTrackIndex + 1);
-                ambientAudio.play().catch(() => {});
-            }
+            loadTrack(currentTrackIndex + 1);
+            musicPlaying = true;
+            updatePlayButtonUI();
+            ambientAudio.play().catch(() => {});
         });
         
         // Initialize with first track
