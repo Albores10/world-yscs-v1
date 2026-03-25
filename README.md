@@ -2,7 +2,9 @@
 
 **"Yurtta Sulh Cihanda Sulh"** — *Peace at Home, Peace in the World*
 
-Bir interaktif 3D dünya görselleştirme projesi. Küresel barış koridorlarını, ticaret rotalarını, enerji pipeline'larını ve uluslararası şehir ağlarını sinematik bir deneyimle sunan web uygulaması.
+İnteraktif 3D dünya görselleştirme projesi. Küresel barış koridorlarını, ticaret rotalarını, enerji pipeline'larını ve uluslararası şehir ağlarını sinematik bir deneyimle sunan tek sayfa web uygulaması.
+
+🔗 **Canlı:** [albores10.github.io/world-yscs-v1](https://albores10.github.io/world-yscs-v1/)
 
 ---
 
@@ -18,15 +20,19 @@ Bir interaktif 3D dünya görselleştirme projesi. Küresel barış koridorları
 - Şehir isimlerinin antik dil çevirileri ile hover modu
 - "Yurtta Sulh Cihanda Sulh" felsefesini etkileşimli şekilde keşfet
 
-### 🌐 **8 Coğrafi Katman**
-1. **Beyaz Kuşak** — Ana barış koridoru (beyaz)
-2. **Atlantik** — Batı-Doğu bağlantısı (yeşil)
-3. **Akdeniz-Afrika** — Ay-Sahara rotası (turuncu)
-4. **Pasifik-Asya** — Asya-Pasifik ağı (mavi)
-5. **Amerika** — Trans-Atlantik merkezi (pembe)
-6. **Batı Afrika** — Sahel koridoru (sarı)
-7. **Orta Asya** — İpek Yolu mirası (cyan)
-8. **Pasifik-Güney** — Güney Pasifik hattı (yeşil)
+### 🌐 **9 Coğrafi Katman**
+
+| # | Hat | Renk | Rota |
+|---|-----|------|------|
+| 1 | **Beyaz Kuşak (BK)** | ⬜ Beyaz | Tokyo → Seul → Gansu → Aksu → Buhara → Bakü → Ankara → Roma → Madrid → Turks ve Caicos → Meksika → Honolulu *(yatay halka)* |
+| 2 | **Atlantik (AT)** | 🟢 Yeşil | Vaşington → Karakas → Belem → Rio de Janeiro |
+| 3 | **Akdeniz-Afrika (AK)** | 🟠 Turuncu | Budapeşte → Kahire → Hartum → Mogadişu → Dar es Salaam → Antananarivo → Cape Town |
+| 4 | **Pasifik-Asya (PA)** | 🔵 Mavi | Ulanbatur → Gansu → Hong Kong → Bangkok → Cakarta |
+| 5 | **Amerika (AM)** | 🩷 Pembe | San Francisco → Meksika → Panama → Lima → Santiago |
+| 6 | **Batı Afrika (BA)** | 🟡 Sarı | Londra → Madrid → Marakeş → Dakar → Lagos → Luanda |
+| 7 | **Kafkasya-Kızıl Deniz (OA)** | 🩵 Cyan | Moskova → Bakü → Karaçi |
+| 8 | **Kuzey-Güney Barış (KG)** | 🟣 Mor | Astana → Buhara → Lahor → Tripura |
+| 9 | **Pasifik-Güney (PG)** | 🍏 Yeşil | Tokyo → Tayvan → Cebu → Nabire → Sydney → Tauranga |
 
 ### ⚡ **Görsel Elemanlar**
 - **DNA Çift Helix Enerji Akışı** — Renkli parçacıklar ile dinamik enerji taşımacılığı
@@ -44,14 +50,21 @@ Bir interaktif 3D dünya görselleştirme projesi. Küresel barış koridorları
 - **Zoom Seviyeleri** — Yakın/Orta/Uzak görünümler
 
 ### 🎵 **Müzik**
-- Ambient müzik: `12 Dil v4.wav`
-- Otomatik başlar (TOS modu)
-- Manuel açıp kapat butonuyla kontrol
+- 5 ambient parça: `12 Dil v1` → `v2` → `v3` → `v4` → `v5`
+- Parça bitince otomatik sonrakine geçer (döngü)
+- TOS modunda otomatik oynatılır
+- ◀ ▶️ ▶ butonlarıyla manuel kontrol
+
+### � **Mobil Uyumluluk**
+- Mobil öncelik responsive tasarım (640px / 980px kırılımları)
+- Tur ve şehir satırları yatay kaydırmalı
+- Dokunmatik ekran için büyütülmüş buton alanları
+- Alt bar, yan paneller mobilde yeniden konumlanır
 
 ### 📸 **Ek Özellikler**
 - Ekran görüntüsü alma (PNG)
-- Şehir navigasyonu (12 ana şehir)
-- Koridim renk dinamiği (gece/gündüz senkron)
+- Şehir navigasyonu (hızlı geçiş butonları)
+- Koridor genişlik dinamiği (gece/gündüz senkron)
 - Legends & Stats paneli
 
 ---
@@ -70,21 +83,22 @@ python3 -m http.server 8000
 | Buton | Fonksiyon |
 |-------|----------|
 | 🎥 **TOS** | Tam Otomatik Sinema (hepsi birlikte) |
-| **YSCS** | Şehir Hover Modu (antik diller) |
-| **🎬 Tümü** | Tüm turları oynat |
-| **🌙▶️** | Güneş otomatik olarak hareket |
-| **🎵** | Müzik aç/kapat |
-| **📸** | Ekran görüntüsü indir |
+| **YSCS** | Şehir Hover Modu (barış sözleri) |
+| **🎬 Tümü** | Tüm turları sırayla oynat |
+| **🌙 ▶️** | Güneş konumunu otomatik ilerlet |
+| **◀ ▶️ ▶** | Müzik önceki / oynat / sonraki |
+| **📸** | Ekran görüntüsü indir (PNG) |
 
 ### Tur Butonları
-- ⬜ **BK** — Beyaz Kuşak Turu
-- 🟢 **AT** — Atlantik Turu
-- 🟠 **AK** — Akdeniz-Afrika Turu
-- 🔵 **PA** — Pasifik-Asya Turu
-- 🟣 **AM** — Amerika Turu
-- 🟡 **BA** — Batı Afrika Turu
-- 🔵 **OA** — Orta Asya Turu
-- 🟢 **PG** — Pasifik-Güney Turu
+- ⬜ **BK** — Beyaz Kuşak (ana yatay halka)
+- 🟢 **AT** — Atlantik
+- 🟠 **AK** — Akdeniz-Afrika
+- 🔵 **PA** — Pasifik-Asya
+- 🟣 **AM** — Amerika
+- 🟡 **BA** — Batı Afrika
+- 🔵 **OA** — Kafkasya-Kızıl Deniz
+- 🟣 **KG** — Kuzey-Güney Barış
+- 🟢 **PG** — Pasifik-Güney
 
 ---
 
@@ -92,12 +106,26 @@ python3 -m http.server 8000
 
 ```
 world-yscs-v1/
-├── index.html           # Ana uygulama (Three.js + HTML/CSS/JS)
+├── index.html           # Ana uygulama (Three.js + HTML/CSS/JS, tek dosya)
 ├── music/
-│   └── 12 Dil v4.wav   # Ambient müzik dosyası
-├── fix.py              # Temizleme scripti
+│   ├── 12 Dil v1.wav   # Ambient müzik — 1. parça
+│   ├── 12 Dil v2.wav   # Ambient müzik — 2. parça
+│   ├── 12 Dil v3.wav   # Ambient müzik — 3. parça
+│   ├── 12 Dil v4.wav   # Ambient müzik — 4. parça
+│   └── 12 Dil v5.wav   # Ambient müzik — 5. parça
+├── fix.py              # Yardımcı script
 └── README.md           # Bu dosya
 ```
+
+---
+
+## 🛠️ Teknolojiler
+
+- **Three.js r128** — 3D WebGL render
+- **Tailwind CSS (CDN)** — Yardımcı CSS sınıfları
+- **HTML5 Audio API** — Müzik oynatıcı
+- **Vanilla JS** — Tüm interaktif mantık
+- **Canvas API** — Dinamik dokular (şehir etiketleri, parçacıklar)
 
 ---
 
