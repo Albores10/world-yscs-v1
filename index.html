@@ -302,6 +302,186 @@
         }
         input:checked + .slider { background-color: #3b82f6; border-color: #3b82f6; }
         input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Responsive UI: mobile-first usability improvements */
+        #tourRow {
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        #tourRow::-webkit-scrollbar { display: none; }
+
+        #quickCityNav {
+            overflow-x: auto;
+            max-width: min(52vw, 520px);
+            scrollbar-width: none;
+        }
+        #quickCityNav::-webkit-scrollbar { display: none; }
+
+        @media (max-width: 980px) {
+            .card {
+                padding: 8px 10px;
+                gap: 10px;
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .controls-group {
+                flex-wrap: wrap;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .control-item {
+                min-height: 30px;
+            }
+
+            #layerComboBtn, #featComboBtn {
+                min-height: 30px;
+                font-size: 11px !important;
+            }
+
+            #tourRow {
+                padding: 4px 10px 6px !important;
+                gap: 4px !important;
+                flex-wrap: nowrap !important;
+            }
+
+            #tourRow .tourBtn,
+            #tourRow #tosBtn,
+            #tourRow #yscsBtn,
+            #tourRow .zoomBtn {
+                min-height: 28px;
+                padding: 4px 7px !important;
+                font-size: 10px !important;
+            }
+
+            #cityPanel {
+                left: 8px !important;
+                top: auto !important;
+                bottom: 86px !important;
+                transform: none !important;
+            }
+
+            #corridorSliderBox {
+                right: 8px !important;
+                top: auto !important;
+                bottom: 88px !important;
+                transform: none !important;
+                gap: 4px !important;
+            }
+
+            #miniStats {
+                right: 10px !important;
+                bottom: 168px !important;
+                font-size: 9px !important;
+                padding: 4px 8px !important;
+            }
+
+            .bottom-bar {
+                padding: 8px 10px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            #sunSlider {
+                min-width: 120px;
+            }
+
+            #musicPlaylistPanel {
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+                border-left: none !important;
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            #musicPlaylistPanel button {
+                min-width: 34px;
+                min-height: 28px;
+            }
+
+            #nowPlayingLabel {
+                font-size: 9px !important;
+                min-width: 0 !important;
+            }
+
+            #floatingMusicPanel {
+                right: 8px;
+                top: 44px;
+            }
+
+            .toggle-btn-ui {
+                top: 8px;
+                right: 8px;
+                padding: 7px 11px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .card h1 {
+                font-size: 12px !important;
+            }
+
+            .card {
+                padding: 7px 8px;
+                gap: 8px;
+            }
+
+            .controls-group {
+                gap: 6px;
+            }
+
+            #layerComboList,
+            #featComboList {
+                max-height: 52vh;
+                overflow-y: auto;
+                max-width: 90vw;
+            }
+
+            #tourRow {
+                padding: 4px 8px 6px !important;
+            }
+
+            #quickCityNav {
+                max-width: 66vw;
+            }
+
+            #cityPanelList {
+                max-height: 42vh !important;
+                min-width: 110px !important;
+            }
+
+            #corridorSliderBox {
+                bottom: 92px !important;
+            }
+
+            #miniStats {
+                bottom: 172px !important;
+            }
+
+            .bottom-bar {
+                padding: 6px 8px;
+                gap: 6px;
+            }
+
+            #sunPlayBtn,
+            #screenshotBtn {
+                width: 30px !important;
+                height: 30px !important;
+            }
+
+            #sunSpeedSlider {
+                width: 44px !important;
+            }
+
+            #musicPlaylistPanel {
+                gap: 4px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -375,7 +555,7 @@
             </div>
         </div>
         <!-- Row 2: Cinematic tour + zoom + cities -->
-        <div style="display:flex;align-items:center;gap:6px;padding:2px 12px 4px;flex-wrap:wrap;">
+        <div id="tourRow" style="display:flex;align-items:center;gap:6px;padding:2px 12px 4px;flex-wrap:wrap;">
             <span style="font-size:9px;color:#888;">Tur</span>
             <button class="tourBtn" data-route="bk" title="Beyaz Kuşak Turu" style="font-size:9px;background:rgba(255,255,255,0.25);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">⬜BK</button>
             <button class="tourBtn" data-route="at" title="Atlantik Turu" style="font-size:9px;background:rgba(34,204,102,0.4);border:none;color:#fff;border-radius:4px;padding:2px 4px;cursor:pointer;">🟢AT</button>
@@ -395,7 +575,7 @@
             <button class="zoomBtn" data-zoom="11" style="font-size:7px;background:rgba(0,200,255,0.5);border:1px solid rgba(0,200,255,0.6);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;">Orta</button>
             <button class="zoomBtn" data-zoom="16" style="font-size:7px;background:rgba(0,200,255,0.3);border:none;color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;">Uzak</button>
             <span style="font-size:7px;color:#555;margin-left:2px;">|</span>
-            <div style="display:flex;gap:2px;overflow-x:auto;max-width:320px;scrollbar-width:none;-ms-overflow-style:none;">
+            <div id="quickCityNav" style="display:flex;gap:2px;overflow-x:auto;max-width:320px;scrollbar-width:none;-ms-overflow-style:none;">
                 <button class="cityNav" data-lat="35.68" data-lon="139.65" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Tokyo</button>
                 <button class="cityNav" data-lat="37.57" data-lon="126.98" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Seul</button>
                 <button class="cityNav" data-lat="36.06" data-lon="103.83" style="font-size:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.15);color:#ddd;border-radius:3px;padding:1px 4px;cursor:pointer;white-space:nowrap;">Gansu</button>
